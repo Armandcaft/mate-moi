@@ -1,0 +1,27 @@
+# fly launch --no-deploy reads this; see README "Deploy".
+app = "mate-moi"
+primary_region = "cdg"
+
+[env]
+  ORIGIN = "https://mate-moi.fly.dev"
+
+[[mounts]]
+  source = "mate_moi_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # Sleeps when nobody is looking; wakes in a second or two on the next visit.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

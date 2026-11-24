@@ -1,0 +1,9 @@
+{
+	"name": "Mate-Moi si tu peux",
+	"short_name": "Mate-Moi",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#0B0B0D",
+	"theme_color": "#0B0B0D",
+	"icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

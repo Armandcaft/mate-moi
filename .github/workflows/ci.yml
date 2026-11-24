@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    # Proves the image Fly.io deploys still builds and serves /health.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t mate-moi .
+      - run: |
+          docker run -d --name app -p 3000:3000 -e ORIGIN=http://localhost:3000 mate-moi
+          for i in $(seq 30); do curl -fs localhost:3000/health && exit 0; sleep 1; done
+          docker logs app; exit 1
