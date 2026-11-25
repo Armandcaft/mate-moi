@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { groupSchedule, joinerSchedule, nextStep, pairs, rank, table, type Game, type NewGame, type Result } from './index';
+import {
+	gamesPerPairFor,
+	gamesPerPairIn,
+	groupSchedule,
+	joinerSchedule,
+	nextStep,
+	pairs, rank, table, type Game, type NewGame, type Result } from './index';
 
 const A = 1, B = 2, C = 3;
 const PLAYERS = [A, B, C];
@@ -209,5 +215,45 @@ describe('joinerSchedule', () => {
 		const done = joined.map((g) => ({ ...g, result: beats(g, D) }));
 		const step = nextStep([A, B, C, D], [...played, ...done]);
 		expect(step).toMatchObject({ phase: 'final', finalists: [D, A] }); // D 27 points, A 18
+	});
+});
+
+describe('games per opponent', () => {
+	it.each([
+		[2, 3], [3, 3], [4, 3], [5, 2], [6, 2], [7, 1], [10, 1]
+	])('%i players → %i games against each opponent', (n, g) => {
+		expect(gamesPerPairFor(n)).toBe(g);
+	});
+
+	it('keeps each player’s week between 6 and 10 games up to 7 players', () => {
+		for (let n = 3; n <= 7; n++) {
+			const each = (n - 1) * gamesPerPairFor(n);
+			expect(each).toBeGreaterThanOrEqual(6);
+			expect(each).toBeLessThanOrEqual(10);
+		}
+	});
+
+	it('reads a scheduled week’s count back from its games', () => {
+		const five = [1, 2, 3, 4, 5];
+		expect(gamesPerPairIn(groupSchedule(five, 2, 1))).toBe(2);
+		expect(gamesPerPairIn(groupSchedule(PLAYERS, 3, 1))).toBe(3);
+		expect(gamesPerPairIn([])).toBe(0);
+	});
+
+	it('a 2-game week gives each player one White per opponent', () => {
+		const games = groupSchedule([1, 2, 3, 4, 5], 2, 1);
+		for (const [a, b] of pairs([1, 2, 3, 4, 5])) {
+			const between = games.filter((g) => [g.whiteId, g.blackId].sort().join() === [a, b].sort().join());
+			expect(between.map((g) => g.whiteId).sort()).toEqual([a, b].sort());
+		}
+	});
+
+	it('a joiner plays the week’s own count, not the new group size’s', () => {
+		// A 4-player week (3 each) that a 5th player joins: still 3 each, never 2.
+		const week = groupSchedule([1, 2, 3, 4], 3, 1);
+		const joined = joinerSchedule([1, 2, 3, 4], 5, gamesPerPairIn(week), 1);
+		const all = [...week, ...joined];
+		for (const [a, b] of pairs([1, 2, 3, 4, 5]))
+			expect(all.filter((g) => [g.whiteId, g.blackId].sort().join() === [a, b].sort().join())).toHaveLength(3);
 	});
 });

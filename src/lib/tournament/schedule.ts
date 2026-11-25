@@ -66,3 +66,15 @@ export function joinerSchedule(
 	}
 	return games;
 }
+
+/**
+ * How many games each pair plays in a week already scheduled: a newcomer joining it must play the
+ * same number, whatever the group's new size, or the round-robin would be uneven.
+ */
+export function gamesPerPairIn(games: Pick<NewGame, 'stage' | 'whiteId' | 'blackId'>[]): number {
+	const group = games.filter((g) => g.stage === 'group');
+	if (!group.length) return 0;
+	const key = (g: (typeof group)[number]) => [g.whiteId, g.blackId].sort((a, b) => a - b).join();
+	const first = key(group[0]);
+	return group.filter((g) => key(g) === first).length;
+}

@@ -29,6 +29,8 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   load) and answers 404. `/invitation/[token]` is public: the one-time token is the authorization.
   A newcomer joins the running week only during its group stage (`joinCurrentWeek`, adding
   `joinerSchedule`'s games so the week stays a full round-robin); after that, the next week.
+- Games per opponent: `gamesPerPairFor(players)` when a week starts (3 / 2 / 1 by group size); a
+  joiner plays the running week's own count, read back with `gamesPerPairIn`, never the new size's.
 - Restore = `restore.db` next to the database, swapped in by `docker-entrypoint.sh` at start-up.
 - `src/lib/server/og.ts` + `/partage/[key]` and `/og/[key].png` — the WhatsApp link preview
   (Satori + resvg). **Public, with `/login` and `/invitation/`**, listed in `hooks.server.ts`; they

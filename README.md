@@ -1,13 +1,15 @@
 # ♔ Mate-Moi si tu peux
 
-Le tournoi d'échecs hebdomadaire entre amis : chacun affronte chacun, trois parties par adversaire,
+Le tournoi d'échecs hebdomadaire entre amis : chacun affronte chacun, plusieurs parties par adversaire,
 puis une finale entre les deux meilleurs désigne le **Roi de la Semaine**.
 
 SvelteKit · SQLite (Drizzle) · Tailwind · un seul serveur Node sur Fly.io.
 
 ## Les règles, telles que l'app les applique
 
-- **Phase de groupes** : chaque paire joue 3 parties, couleurs alternées (la Blanche en plus change de
+- **Phase de groupes** : chaque paire joue plusieurs parties, selon le nombre de joueurs au
+  lancement de la semaine : **3** jusqu'à 4 joueurs, **2** pour 5 ou 6, **1** à partir de 7
+  (soit 6 à 10 parties chacun jusqu'à 7 joueurs). Couleurs alternées (la Blanche en plus change de
   camp chaque semaine). Victoire 3 pts, nulle 1, défaite 0.
 - **Égalités** de points, départagées dans cet ordre :
   1. les points des parties entre les joueurs à égalité (face-à-face),
@@ -64,8 +66,8 @@ Un joueur désactivé garde son historique mais n'entre plus dans les nouvelles 
 
 ## Arriver en cours de semaine
 
-- **Pendant la phase de groupes** : le nouveau joueur entre tout de suite. Ses 3 parties contre
-  chacun s'ajoutent à la semaine, qui reste un tournoi complet où tout le monde affronte tout le
+- **Pendant la phase de groupes** : le nouveau joueur entre tout de suite. Ses parties contre
+  chacun s'ajoutent à la semaine, autant que les autres en jouent entre eux cette semaine-là, qui reste un tournoi complet où tout le monde affronte tout le
   monde autant de fois : le classement reste juste. La finale attend que ses parties soient jouées.
 - **Pendant le barrage ou la finale** : il commence la semaine suivante.
 - Pas de semaine en cours : il fera partie de la prochaine.

@@ -24,10 +24,19 @@ export interface Game {
 export type NewGame = Omit<Game, 'result'>;
 
 export interface Rules {
-	gamesPerPair: number;
 	win: number;
 	draw: number;
 	loss: number;
 }
 
-export const RULES: Rules = { gamesPerPair: 3, win: 3, draw: 1, loss: 0 };
+export const RULES: Rules = { win: 3, draw: 1, loss: 0 };
+
+/**
+ * Games against each opponent in a new week, so the week stays playable as the group grows:
+ * 3 up to 4 players (9 games each), 2 for 5–6 (8–10 each), 1 from 7 (6 or more each).
+ */
+export function gamesPerPairFor(players: number): number {
+	if (players <= 4) return 3;
+	if (players <= 6) return 2;
+	return 1;
+}

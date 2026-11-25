@@ -38,7 +38,7 @@
 		</p>
 	{:else}
 		<p class="mb-6 text-center text-sm text-muted">
-			Trois parties contre chaque adversaire, une finale, un Roi par semaine. Si la phase de groupes
+			Chacun affronte chacun, une finale, un Roi par semaine. Si la phase de groupes
 			de la semaine est en cours, tu y entres tout de suite.
 		</p>
 		<form

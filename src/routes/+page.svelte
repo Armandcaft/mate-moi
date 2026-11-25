@@ -88,7 +88,8 @@
 		<Crown size={48} class="mx-auto mb-4" />
 		<h1 class="font-display text-2xl font-bold text-silver">Le trône est vide.</h1>
 		<p class="mx-auto mt-2 mb-6 max-w-xs text-sm text-muted">
-			Trois parties contre chaque adversaire, puis une finale entre les deux meilleurs.
+			Chacun affronte chacun (3 parties par adversaire jusqu’à 4 joueurs, 2 jusqu’à 6, puis 1), puis
+			une finale entre les deux meilleurs.
 		</p>
 		{@render startButton('Lancer la semaine 1')}
 	</section>
@@ -99,7 +100,10 @@
 			<h1 class="font-display text-2xl font-bold text-silver">{PHASE_LABEL[step!.phase]}</h1>
 		</div>
 		{#if step?.phase === 'group'}
-			<p class="text-sm text-muted tabular-nums">{played} / {groupGames.length} parties</p>
+			<div class="text-right whitespace-nowrap">
+				<p class="text-sm text-muted tabular-nums">{played} / {groupGames.length} parties</p>
+				<p class="text-xs text-muted/80">{view.gamesPerPair} par adversaire</p>
+			</div>
 		{/if}
 	</div>
 

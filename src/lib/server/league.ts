@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import {
-	RULES,
+	gamesPerPairFor,
+	gamesPerPairIn,
 	groupSchedule,
 	joinerSchedule,
 	nextStep,
@@ -51,6 +52,8 @@ export interface WeekView {
 	standings: (Line & { rank: number })[];
 	games: GameRow[];
 	step: Step;
+	/** Games against each opponent this week (3, 2 or 1, set by the group's size at the start). */
+	gamesPerPair: number;
 }
 
 export function weekView(week: Week): WeekView {
@@ -76,7 +79,8 @@ export function weekView(week: Week): WeekView {
 		players: new Map(named.map((p) => [p.id, p])),
 		standings,
 		games: rows,
-		step: nextStep(ids, engineGames)
+		step: nextStep(ids, engineGames),
+		gamesPerPair: gamesPerPairIn(rows)
 	};
 }
 
@@ -145,7 +149,7 @@ export function startWeek(): Week {
 
 		const schedule = groupSchedule(
 			ids.map((p) => p.id),
-			RULES.gamesPerPair,
+			gamesPerPairFor(ids.length),
 			number
 		);
 		tx.insert(games)
@@ -228,7 +232,8 @@ export function joinCurrentWeek(tx: Tx, playerId: number): 'joined' | 'next-week
 	if (ids.includes(playerId)) return 'joined';
 	if (nextStep(ids, rows.map(toGame)).phase !== 'group') return 'next-week';
 
-	const added = joinerSchedule(ids, playerId, RULES.gamesPerPair, week.number);
+	// The week's own count, set when it started: the newcomer plays everyone as often as they did.
+	const added = joinerSchedule(ids, playerId, gamesPerPairIn(rows), week.number);
 	tx.insert(games)
 		.values(added.map((g) => ({ ...g, weekId: week.id })))
 		.run();
