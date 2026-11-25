@@ -1,132 +1,168 @@
-# ♔ Mate-Moi si tu peux
+<div align="center">
 
-Le tournoi d'échecs hebdomadaire entre amis : chacun affronte chacun, plusieurs parties par adversaire,
-puis une finale entre les deux meilleurs désigne le **Roi de la Semaine**.
+<img src="static/favicon.svg" width="88" alt="" />
 
-SvelteKit · SQLite (Drizzle) · Tailwind · un seul serveur Node sur Fly.io.
+# Mate-Moi si tu peux
 
-## Les règles, telles que l'app les applique
+**A weekly chess league for friends. Everyone plays everyone, the top two play the final, one King of the Week.**
 
-- **Phase de groupes** : chaque paire joue plusieurs parties, selon le nombre de joueurs au
-  lancement de la semaine : **3** jusqu'à 4 joueurs, **2** pour 5 ou 6, **1** à partir de 7
-  (soit 6 à 10 parties chacun jusqu'à 7 joueurs). Couleurs alternées (la Blanche en plus change de
-  camp chaque semaine). Victoire 3 pts, nulle 1, défaite 0.
-- **Égalités** de points, départagées dans cet ordre :
-  1. les points des parties entre les joueurs à égalité (face-à-face),
-  2. le nombre de victoires,
-  3. un **barrage en Armageddon** (la nulle compte comme une victoire des Noirs), rejoué tant
-     qu'il le faut. Seule l'égalité qui décide d'une place en finale est jouée : deux joueurs à
-     égalité en tête vont tous les deux en finale.
-- **Finale** : le mieux classé a les Blancs. En cas de nulle, une partie Armageddon décide ;
-  le mieux classé y a les Noirs (et donc l'avantage de la nulle).
-- **Résultats** : l'un des deux joueurs déclare le résultat, l'autre le confirme ou le conteste.
-  Seul un résultat confirmé compte.
+[![CI](https://github.com/Armandcaft/mate-moi/actions/workflows/ci.yml/badge.svg)](https://github.com/Armandcaft/mate-moi/actions/workflows/ci.yml)
+[![Live](https://img.shields.io/badge/live-mate--moi.fly.dev-C9A24A?logo=flydotio&logoColor=white)](https://mate-moi.fly.dev)
+![Languages](https://img.shields.io/badge/i18n-FR%20%C2%B7%20EN%20%C2%B7%20DE-C8CBD2)
+![Private league](https://img.shields.io/badge/league-invite%20only-151518)
 
-Les règles vivent dans `src/lib/tournament/` (fonctions pures, testées) ; changer un barème ou un
-départage se fait là, `RULES` dans `types.ts`.
+![SvelteKit](https://img.shields.io/badge/SvelteKit-3-FF3E00?logo=svelte&logoColor=white)
+![Svelte](https://img.shields.io/badge/Svelte-5%20runes-FF3E00?logo=svelte&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-one%20file-003B57?logo=sqlite&logoColor=white)
+![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?logo=drizzle&logoColor=black)
+![Vitest](https://img.shields.io/badge/tested%20with-Vitest-6E9F18?logo=vitest&logoColor=white)
+![Node](https://img.shields.io/badge/Node-%E2%89%A522.18-5FA04E?logo=nodedotjs&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+![Fly.io](https://img.shields.io/badge/deployed%20on-Fly.io-8B5CF6?logo=flydotio&logoColor=white)
 
-## Développer
+<img src="docs/screenshots/week.jpg" width="230" alt="The week: standings and games to report" />
+<img src="docs/screenshots/king.jpg" width="230" alt="The King of the Week, with his motto" />
+<img src="docs/screenshots/kings.jpg" width="230" alt="The Hall of Kings" />
+
+</div>
+
+## ♟️ How a week goes
+
+1. **Someone starts the week.** The app schedules every pairing and picks colours.
+2. **Play anywhere** (a real board, Lichess, the office). Then one player taps the winner, or *Draw*.
+3. **The opponent confirms** or disputes. Only confirmed results count.
+4. **The top two play the final.** A drawn final goes to Armageddon.
+5. **♔ The King is crowned,** their motto shows up, and the standings go to WhatsApp as an image.
+
+## ✨ Features
+
+| | |
+|---|---|
+| 🏆 **Standings & tie-breaks** | 3 / 1 / 0 points, then head-to-head, wins, and Armageddon play-offs |
+| 📈 **Scales with the group** | 3 games per opponent up to 4 players, 2 up to 6, then 1 |
+| 📲 **WhatsApp previews** | the share link unfurls into a standings card, King and motto included |
+| ✉️ **Invite links** | one-time, 48 h; newcomers pick their own name and code, and can join mid-week |
+| 🙋 **Profiles** | change your name, your motto (60 characters), your code |
+| 🛡️ **Admin tab** | invites, temporary codes, (de)activation, promotion, one-click backup |
+| 🌍 **Three languages** | French (default), English, German; follows the phone, switchable anytime |
+| 🔐 **Locked down** | peppered scrypt codes, lockout after 5 tries; only login, invitations and link previews are public |
+
+<details>
+<summary><b>📜 The exact rules</b></summary>
+
+- **Group stage**: every pair plays 3, 2 or 1 games depending on the group size when the week
+  starts. Colours alternate; who gets the extra White flips every week. Win 3, draw 1, loss 0.
+- **Ties** on points, in order: points between the tied players, number of wins, then an
+  Armageddon play-off (a draw counts as a win for Black), repeated until someone is ahead.
+  Only the tie that decides a place in the final is played off.
+- **Final**: the better-ranked player has White. A draw sends it to Armageddon, where the
+  better-ranked player has Black, and with it the draw odds.
+- **Joining mid-week**: during the group stage, the newcomer's games against everyone are added
+  (as many as each pair plays that week), so the round-robin stays even and the final waits for
+  them. During a play-off or the final, they start the next week.
+
+The rules are pure, tested functions in [`src/lib/tournament/`](src/lib/tournament).
+</details>
+
+## 🧰 Commands
+
+### On your computer
+
+| Command | What it does |
+|---|---|
+| `npm install` | install dependencies |
+| `npm run dev` | dev server on http://localhost:5173 |
+| `npm test` | unit tests (rules, codes, profiles, translations) |
+| `npm run check` · `check:watch` | type-check Svelte and TypeScript |
+| `npm run build` then `npm start` | production build, served on port 3000 |
+| `npm run preview` | preview the production build |
+| `npm run db:generate` | write a migration after editing `src/lib/server/db/schema.ts` (commit `drizzle/`) |
+
+### Players (the `player` script)
+
+Locally: `npm run player -- <command>`. On Fly.io:
+`fly ssh console -C "sh -c 'cd /app && node scripts/player.ts <command>'"`.
+
+| Command | What it does |
+|---|---|
+| `add <name> <code>` | new player with a **temporary** code (6 to 8 digits); they choose their own at first login |
+| `pin <name> <code>` | forgotten code: a new temporary one, also lifts a lockout |
+| `promote <name>` · `demote <name>` | give or remove the admin tab |
+| `deactivate <name>` · `activate <name>` | sign out and bench a player, history kept |
+| `list` | everyone, with admin and inactive flags |
+
+After the first admin exists, the **Admin tab** does all of this from the app.
+
+### On Fly.io
+
+| Command | What it does |
+|---|---|
+| `fly deploy` | deploy (or let the GitHub integration deploy on push) |
+| `fly status` · `fly logs` | is it up, what is it saying |
+| `fly scale count 1` | keep **one** machine: SQLite lives on one volume |
+| `fly machine start` · `fly machine restart` | wake it up, or restart (also applies a restore) |
+| `fly secrets set PIN_PEPPER=$(openssl rand -hex 32)` | once, **before** creating players; never change it |
+| `fly volumes list` · `fly volumes snapshots list <id>` | the disk, and Fly's daily snapshots (5 days) |
+| `fly ssh sftp shell` → `put backup.db /data/restore.db` | upload a backup to restore it at the next start |
+
+<details>
+<summary><b>🚀 First deployment</b></summary>
 
 ```sh
-npm install
-npm run player -- add Frank 482915 # les joueurs et leurs codes ne sont jamais dans le dépôt
-npm run dev                        # http://localhost:5173
-npm test                           # le moteur du tournoi
-npm run check                      # types
-```
-
-La base est `data/mate-moi.db` (ignorée par git). Après un changement de
-`src/lib/server/db/schema.ts` : `npm run db:generate`, puis commiter le dossier `drizzle/` ;
-les migrations s'appliquent au démarrage.
-
-Joueurs : `npm run player -- add|pin <nom> <code>`, `activate|deactivate <nom>`, `list`.
-Un joueur désactivé garde son historique mais n'entre plus dans les nouvelles semaines.
-
-## Les codes
-
-- Le code donné avec `add` ou `pin` est **provisoire** : à la connexion suivante, le joueur doit
-  choisir le sien (6 à 8 chiffres, pas de suite ni de chiffre répété). Personne d'autre ne le connaît.
-- Chacun peut le changer quand il veut en touchant son nom en haut à droite ; ses autres appareils
-  sont alors déconnectés.
-- **Code oublié** : `player pin <nom> <code provisoire>`. Cela lève aussi un éventuel blocage.
-- 5 codes faux de suite bloquent le joueur 15 minutes. Le compteur est en base : redémarrer le
-  serveur ne le remet pas à zéro.
-
-## Mon profil
-
-Toucher son nom en haut à droite ouvre **Mon profil** : changer son nom (il change partout, même
-dans l'historique), sa **devise** (60 caractères, affichée quand on est couronné, sur l'aperçu
-WhatsApp, à la connexion et chez les Rois) et son code.
-
-## Admins et invitations
-
-- Le premier admin se nomme en ligne de commande, une fois :
-  `fly ssh console -C "sh -c 'cd /app && node scripts/player.ts promote <nom>'"`.
-- Ensuite tout se fait dans l'onglet **Admin** de l'app :
-  - **Créer un lien d'invitation** : à envoyer sur WhatsApp. Il sert une seule fois et expire au
-    bout de 48 h. Le nouveau joueur choisit lui-même son nom et son code.
-  - **Nouveau code provisoire** pour un code oublié (le joueur est déconnecté et en choisit un
-    nouveau à la connexion), **Désactiver / Réactiver**, **Nommer / Retirer admin**.
-  - **Télécharger toute la ligue** : la sauvegarde complète, un seul fichier `.db`.
-- Seuls les admins invitent. Un admin ne peut ni se désactiver ni se retirer ses propres droits.
-
-## Arriver en cours de semaine
-
-- **Pendant la phase de groupes** : le nouveau joueur entre tout de suite. Ses parties contre
-  chacun s'ajoutent à la semaine, autant que les autres en jouent entre eux cette semaine-là, qui reste un tournoi complet où tout le monde affronte tout le
-  monde autant de fois : le classement reste juste. La finale attend que ses parties soient jouées.
-- **Pendant le barrage ou la finale** : il commence la semaine suivante.
-- Pas de semaine en cours : il fera partie de la prochaine.
-
-## Sauvegarde et restauration
-
-Toute la ligue tient dans **un seul fichier SQLite**. La sauvegarde (onglet Admin) en est une
-copie cohérente, prise pendant que l'app tourne.
-
-**Restaurer** : déposer le fichier sous le nom `restore.db` à côté de la base, puis redémarrer.
-Au démarrage, l'app le met en place et garde l'ancienne base à côté
-(`mate-moi.db.before-restore-<date>`).
-
-```sh
-# Fly.io
-fly ssh sftp shell          # puis : put mate-moi-2026-11-25.db /data/restore.db
-fly machine restart
-
-# Sur un VPS avec Docker (volume monté sur /data)
-cp mate-moi-2026-11-25.db /chemin/du/volume/restore.db && docker restart mate-moi
-```
-
-**Changer de serveur** (Fly.io → VPS) : télécharger la sauvegarde, la restaurer sur le nouveau
-serveur comme ci-dessus, et **reprendre le même `PIN_PEPPER`** (sinon plus aucun code ne
-fonctionne). Ne le connaissant plus ? Restaurer quand même, puis donner un code provisoire à
-chacun avec `player pin`.
-
-⚠️ La sauvegarde contient les codes (chiffrés) : à garder privée.
-
-## Déployer (Fly.io)
-
-```sh
-fly launch --no-deploy --copy-config        # garde fly.toml ; change "app" si le nom est pris
+fly launch --no-deploy --copy-config        # keeps fly.toml; change "app" (and ORIGIN) if taken
 fly volumes create mate_moi_data --size 1 --region cdg
 fly secrets set PIN_PEPPER=$(openssl rand -hex 32)
 fly deploy
 fly ssh console -C "sh -c 'cd /app && node scripts/player.ts add Frank 482915'"
 fly ssh console -C "sh -c 'cd /app && node scripts/player.ts promote Frank'"
 ```
+</details>
 
-Si le nom de l'app change, mets aussi à jour `ORIGIN` dans `fly.toml`.
+<details>
+<summary><b>💾 Backup, restore, moving to another server</b></summary>
 
-⚠️ Définis `PIN_PEPPER` **avant** de créer les joueurs, et ne le change plus : les codes existants
-ne fonctionneraient plus (il faudrait les redéfinir avec `player pin`).
+The whole league is **one SQLite file**. *Admin → Download the whole league* gives a consistent
+copy taken while the app runs.
 
-### Sauvegardes (recommandé)
-
-Le volume est un seul disque. [Litestream](https://litestream.io) copie la base en continu vers un
-stockage objet (Cloudflare R2, Backblaze B2, Tigris…) et la restaure toute seule sur un volume neuf :
+**Restore**: put the file next to the database as `restore.db` and restart. The app swaps it in at
+start-up and keeps the replaced one as `mate-moi.db.before-restore-<date>`.
 
 ```sh
-fly secrets set LITESTREAM_REPLICA_URL=s3://mon-bucket/mate-moi \
-  LITESTREAM_ACCESS_KEY_ID=… LITESTREAM_SECRET_ACCESS_KEY=…
+fly ssh sftp shell        # then: put mate-moi-2026-11-25.db /data/restore.db
+fly machine restart
+
+# a VPS with Docker, volume mounted on /data
+cp mate-moi-2026-11-25.db /path/to/volume/restore.db && docker restart mate-moi
 ```
 
-(Pour R2/B2, ajoute aussi `endpoint:` dans `litestream.yml`.)
+**Moving servers**: restore the backup there and **reuse the same `PIN_PEPPER`**, or no code will
+work (then give everyone a temporary one with `player pin`). The backup holds the hashed codes:
+keep it private.
+
+**Continuous backups** with [Litestream](https://litestream.io) to any S3-compatible storage
+(R2, B2, Tigris…); a fresh volume restores itself:
+
+```sh
+fly secrets set LITESTREAM_REPLICA_URL=s3://my-bucket/mate-moi \
+  LITESTREAM_ACCESS_KEY_ID=… LITESTREAM_SECRET_ACCESS_KEY=…
+```
+For R2 or B2, also add `endpoint:` in `litestream.yml`.
+</details>
+
+## 🗂️ Inside
+
+```
+src/lib/tournament/   the rules: schedule, standings, tie-breaks, what the week needs next
+src/lib/server/       database, auth & codes, league writes, admin, profiles, preview image
+src/lib/i18n/         fr / en / de dictionaries
+src/routes/           week · rois · profil · code · admin · invitation · partage · og · login
+scripts/player.ts     the player command line
+drizzle/              migrations, applied at start-up
+```
+
+CI runs the type check, the tests, the build, and builds the Docker image and checks that it
+serves `/health` and a preview image. Contributor notes: [`CLAUDE.md`](CLAUDE.md).
+
+<div align="center"><sub>Made for a WhatsApp group of friends · ♔ Mate-moi si tu peux</sub></div>
