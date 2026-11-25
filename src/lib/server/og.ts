@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import satori from 'satori';
-import { PHASE_LABEL, pts } from '../format.ts';
+import { translator, type Locale, type Translate } from '../i18n/index.ts';
 import type { WeekView } from './league.ts';
 
 export const OG_WIDTH = 1200;
@@ -40,6 +40,8 @@ const CROWN = `data:image/svg+xml;utf8,${encodeURIComponent(
 	`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8C976"/><stop offset="1" stop-color="#A9822F"/></linearGradient></defs><path fill="url(#g)" d="M8 20l11 10 13-18 13 18 11-10-5 26H13z"/><rect x="13" y="49" width="38" height="6" rx="2" fill="url(#g)"/></svg>`
 )}`;
 
+const pts = (t: Translate, n: number) => t('common.pts', { n });
+
 type Node = { type: string; props: Record<string, unknown> };
 type Child = Node | string | null | undefined | false;
 
@@ -57,7 +59,9 @@ const crown = (size: number): Node => ({
 	props: { src: CROWN, width: size, height: size, style: { width: size, height: size } }
 });
 
-function card(view: WeekView | null): Node {
+function card(view: WeekView | null, locale: Locale): Node {
+	const t = translator(locale);
+	const caps = (s: string) => s.toLocaleUpperCase(locale);
 	const name = (id: number) => view?.players.get(id)?.name ?? '?';
 	const step = view?.step;
 
@@ -65,21 +69,21 @@ function card(view: WeekView | null): Node {
 		'div',
 		{ alignItems: 'center', gap: 18 },
 		crown(52),
-		h('div', { fontFamily: 'Cinzel', fontSize: 38, color: C.gold, letterSpacing: 1 }, 'Mate-Moi si tu peux')
+		h('div', { fontFamily: 'Cinzel', fontSize: 38, color: C.gold, letterSpacing: 1 }, t('app.name'))
 	);
 
 	if (!view || !step) {
 		return frame(
 			header,
-			h('div', { flex: 1, alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel', fontSize: 64, color: C.silver }, 'Le trône est vide.')
+			h('div', { flex: 1, alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel', fontSize: 64, color: C.silver }, t('week.emptyThrone'))
 		);
 	}
 
 	const group = view.games.filter((g) => g.stage === 'group');
 	const played = group.filter((g) => g.confirmedAt).length;
 	const subtitle =
-		`Semaine ${view.week.number} · ${PHASE_LABEL[step.phase]}` +
-		(step.phase === 'group' ? ` · ${played}/${group.length} parties` : '');
+		`${t('week.label', { n: view.week.number })} · ${t(`phase.${step.phase}`)}` +
+		(step.phase === 'group' ? ` · ${t('preview.progress', { played, n: group.length })}` : '');
 	const king = step.phase === 'done' ? step.king : null;
 
 	const rows = view.standings.slice(0, 4).map((l) => {
@@ -95,8 +99,8 @@ function card(view: WeekView | null): Node {
 			},
 			h('div', { width: 56, color: C.muted, fontSize: 28 }, String(l.rank)),
 			h('div', { flex: 1, fontWeight: 600, alignItems: 'center', gap: 12 }, name(l.playerId), king === l.playerId && crown(30)),
-			h('div', { width: 200, color: C.muted, fontSize: 26 }, `${l.wins}V ${l.draws}N ${l.losses}D`),
-			h('div', { width: 140, justifyContent: 'flex-end', fontWeight: 600, fontSize: 40 }, pts(l.points))
+			h('div', { width: 200, color: C.muted, fontSize: 26 }, t('preview.record', { w: l.wins, d: l.draws, l: l.losses })),
+			h('div', { width: 140, justifyContent: 'flex-end', fontWeight: 600, fontSize: 40 }, pts(t, l.points))
 		);
 	});
 
@@ -119,21 +123,21 @@ function card(view: WeekView | null): Node {
 			? h(
 					'div',
 					{ flexDirection: 'column', alignItems: 'center', margin: '18px 0 22px' },
-					h('div', { fontSize: 24, color: C.gold, letterSpacing: 8 }, `ROI DE LA SEMAINE ${view.week.number}`),
+					h('div', { fontSize: 24, color: C.gold, letterSpacing: 8 }, caps(t('week.king', { n: view.week.number }))),
 					h('div', { fontFamily: 'Cinzel', fontSize: 88, color: C.goldHi, lineHeight: 1.1 }, name(king)),
 					view.players.get(king)?.slogan &&
-						h('div', { fontSize: 26, color: C.silver, marginTop: 6, fontStyle: 'italic' }, `« ${view.players.get(king)?.slogan} »`)
+						h('div', { fontSize: 26, color: C.silver, marginTop: 6, fontStyle: 'italic' }, t('common.quote', { text: view.players.get(king)?.slogan ?? '' }))
 				)
 			: step.phase === 'final'
 				? h(
 						'div',
 						{ flexDirection: 'column', alignItems: 'center', margin: '18px 0 22px' },
-						h('div', { fontSize: 24, color: C.gold, letterSpacing: 8 }, 'POUR LA COURONNE'),
+						h('div', { fontSize: 24, color: C.gold, letterSpacing: 8 }, caps(t('week.forTheCrown'))),
 						h(
 							'div',
 							{ fontFamily: 'Cinzel', fontSize: 60, color: C.silver, gap: 24, alignItems: 'center' },
 							name(step.finalists[0]),
-							h('div', { color: C.muted, fontSize: 40 }, 'vs'),
+							h('div', { color: C.muted, fontSize: 40 }, t('common.vs')),
 							name(step.finalists[1])
 						)
 					)
@@ -159,8 +163,8 @@ function frame(...children: Node[]): Node {
 	);
 }
 
-export async function standingsPng(view: WeekView | null): Promise<Buffer> {
-	const svg = await satori(card(view) as Parameters<typeof satori>[0], {
+export async function standingsPng(view: WeekView | null, locale: Locale): Promise<Buffer> {
+	const svg = await satori(card(view, locale) as Parameters<typeof satori>[0], {
 		width: OG_WIDTH,
 		height: OG_HEIGHT,
 		fonts: loadFonts()
@@ -169,10 +173,11 @@ export async function standingsPng(view: WeekView | null): Promise<Buffer> {
 }
 
 /** One line for the preview's description: "Sam 11 pts · Alex 10 pts · Max 4 pts". */
-export function standingsLine(view: WeekView | null): string {
-	if (!view) return 'Le tournoi d’échecs de la semaine.';
+export function standingsLine(view: WeekView | null, locale: Locale): string {
+	const t = translator(locale);
+	if (!view) return t('preview.tagline');
 	return view.standings
-		.map((l) => `${view.players.get(l.playerId)?.name ?? '?'} ${pts(l.points)}`)
+		.map((l) => `${view.players.get(l.playerId)?.name ?? '?'} ${pts(t, l.points)}`)
 		.join(' · ');
 }
 

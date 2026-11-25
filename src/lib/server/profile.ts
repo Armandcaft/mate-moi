@@ -1,9 +1,18 @@
 import { and, eq, ne, sql } from 'drizzle-orm';
+import type { MessageKey, Params, Problem } from '../i18n/index.ts';
 import { nameProblem, normalizeName, normalizeSlogan, sloganProblem } from '../profile.ts';
 import { db, players } from './db/index.ts';
 import type { Tx } from './league.ts';
 
-export class ProfileError extends Error {}
+/** A refusal, carrying a message key: the page puts it in the player's language. */
+export class ProfileError extends Error implements Problem {
+	constructor(
+		readonly key: MessageKey,
+		readonly params?: Params
+	) {
+		super(key);
+	}
+}
 
 /** True if another player already uses `name`, ignoring case ("frank" = "Frank"). */
 export function nameTaken(tx: Tx | typeof db, name: string, exceptId = -1): boolean {
@@ -18,8 +27,8 @@ export function nameTaken(tx: Tx | typeof db, name: string, exceptId = -1): bool
 export function checkedName(tx: Tx | typeof db, raw: string, exceptId = -1): string {
 	const name = normalizeName(raw);
 	const problem = nameProblem(name);
-	if (problem) throw new ProfileError(problem);
-	if (nameTaken(tx, name, exceptId)) throw new ProfileError('Ce nom est déjà pris. Ajoute une initiale ?');
+	if (problem) throw new ProfileError(problem.key, problem.params);
+	if (nameTaken(tx, name, exceptId)) throw new ProfileError('profile.nameTaken');
 	return name;
 }
 
@@ -35,7 +44,7 @@ export function rename(playerId: number, raw: string): string {
 export function setSlogan(playerId: number, raw: string): string | null {
 	const slogan = normalizeSlogan(raw);
 	const problem = sloganProblem(slogan);
-	if (problem) throw new ProfileError(problem);
+	if (problem) throw new ProfileError(problem.key, problem.params);
 	db.update(players).set({ slogan }).where(eq(players.id, playerId)).run();
 	return slogan;
 }

@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { whatsapp } from '#lib/format.ts';
+	import { dateLocale, t } from '#lib/i18n/t.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 
-	const when = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+	const when = $derived(
+		new Intl.DateTimeFormat(dateLocale(), { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+	);
 	const locked = (p: { lockedUntil: Date | null }) => !!p.lockedUntil && p.lockedUntil.getTime() > Date.now();
 	const nameOf = (id: unknown) => data.players.find((p) => p.id === id)?.name ?? '';
 
@@ -20,14 +23,13 @@
 		}
 	}
 
-	const inviteMessage = (link: string) =>
-		`♔ Tu es invité à rejoindre « Mate-Moi si tu peux », notre tournoi d’échecs de la semaine.\n` +
-		`Choisis ton nom et ton code ici (lien valable 48 h, une seule fois) :\n${link}`;
+	/** In the sharer's language: they know who they are inviting. */
+	const inviteMessage = (link: string) => t('admin.inviteMessage', { link });
 </script>
 
-<svelte:head><title>Admin · Mate-Moi</title></svelte:head>
+<svelte:head><title>{t('admin.title')} · {t('app.short')}</title></svelte:head>
 
-<h1 class="font-display mb-5 text-2xl font-bold text-silver">Admin</h1>
+<h1 class="font-display mb-5 text-2xl font-bold text-silver">{t('admin.title')}</h1>
 
 {#if form?.message}
 	<p class="card mb-4 border-loss/60 px-4 py-3 text-sm text-[#d27b7b]" role="alert">{form.message}</p>
@@ -35,28 +37,27 @@
 
 <!-- Invitations -->
 <section class="mb-8">
-	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">Inviter un joueur</h2>
+	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('admin.invitePlayer')}</h2>
 
 	{#if form?.inviteLink}
 		<div class="card mb-3 border-gold/50 p-4">
-			<p class="mb-2 text-sm text-silver">Lien prêt. Il sert une seule fois, pendant 48 h :</p>
+			<p class="mb-2 text-sm text-silver">{t('admin.linkReady')}</p>
 			<p class="mb-3 rounded-lg bg-board px-3 py-2 font-mono text-xs break-all text-muted">{form.inviteLink}</p>
 			<div class="grid grid-cols-2 gap-2">
 				<button type="button" class="btn btn-ghost" onclick={() => copy(form.inviteLink as string)}>
-					{copied ? 'Copié ✓' : 'Copier'}
+					{t(copied ? 'admin.copied' : 'admin.copy')}
 				</button>
 				<a class="btn btn-gold" href={whatsapp(inviteMessage(form.inviteLink as string))} target="_blank" rel="noopener">
-					Envoyer
+					{t('admin.send')}
 				</a>
 			</div>
 			<p class="mt-3 text-xs text-muted">
-				Pendant la phase de groupes, il entre dans la semaine en cours : ses parties contre chacun
-				s’ajoutent. Après, il commence la semaine suivante.
+				{t('admin.joinRule')}
 			</p>
 		</div>
 	{:else}
 		<form method="POST" action="?/invite" use:enhance>
-			<button class="btn btn-gold w-full">Créer un lien d’invitation</button>
+			<button class="btn btn-gold w-full">{t('admin.createInvite')}</button>
 		</form>
 	{/if}
 
@@ -65,8 +66,8 @@
 			{#each data.invites as inv (inv.id)}
 				<form method="POST" action="?/revoke" use:enhance class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
 					<input type="hidden" name="invite" value={inv.id} />
-					<span class="text-muted">Lien de {inv.by} · expire {when.format(inv.expiresAt)}</span>
-					<button class="text-xs text-[#d27b7b] hover:underline">Annuler</button>
+					<span class="text-muted">{t('admin.inviteBy', { by: inv.by, when: when.format(inv.expiresAt) })}</span>
+					<button class="text-xs text-[#d27b7b] hover:underline">{t('admin.revoke')}</button>
 				</form>
 			{/each}
 		</div>
@@ -75,13 +76,13 @@
 
 <!-- Players -->
 <section class="mb-8">
-	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">Joueurs</h2>
+	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('admin.players')}</h2>
 
 	{#if form?.tempPin}
 		<div class="card mb-3 border-gold/50 p-4 text-sm" role="status">
-			<p class="text-silver">Code provisoire de {nameOf(form.tempFor)} :</p>
+			<p class="text-silver">{t('admin.tempPinFor', { name: nameOf(form.tempFor) })}</p>
 			<p class="font-display my-2 text-center text-3xl tracking-[0.3em] text-gold">{form.tempPin}</p>
-			<p class="text-xs text-muted">Envoie-le-lui en privé : il choisira le sien à la connexion. Il ne sera plus affiché.</p>
+			<p class="text-xs text-muted">{t('admin.tempPinHint')}</p>
 		</div>
 	{/if}
 
@@ -90,27 +91,27 @@
 			{@const me = p.id === data.me?.id}
 			<details class="card group {p.active ? '' : 'opacity-60'}">
 				<summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3">
-					<span class="font-medium text-silver">{p.name}{me ? ' (toi)' : ''}</span>
+					<span class="font-medium text-silver">{p.name}{me ? ` ${t('common.you')}` : ''}</span>
 					<span class="flex flex-wrap justify-end gap-1 text-[10px] tracking-wider uppercase">
-						{#if p.isAdmin}<span class="rounded-full border border-gold/50 px-2 py-0.5 text-gold">Admin</span>{/if}
-						{#if !p.active}<span class="rounded-full border border-line px-2 py-0.5 text-muted">Inactif</span>{/if}
-						{#if p.mustChangePin}<span class="rounded-full border border-line px-2 py-0.5 text-muted">Code provisoire</span>{/if}
-						{#if locked(p)}<span class="rounded-full border border-loss/60 px-2 py-0.5 text-[#d27b7b]">Bloqué</span>{/if}
+						{#if p.isAdmin}<span class="rounded-full border border-gold/50 px-2 py-0.5 text-gold">{t('admin.badgeAdmin')}</span>{/if}
+						{#if !p.active}<span class="rounded-full border border-line px-2 py-0.5 text-muted">{t('admin.badgeInactive')}</span>{/if}
+						{#if p.mustChangePin}<span class="rounded-full border border-line px-2 py-0.5 text-muted">{t('admin.badgeTempPin')}</span>{/if}
+						{#if locked(p)}<span class="rounded-full border border-loss/60 px-2 py-0.5 text-[#d27b7b]">{t('admin.badgeLocked')}</span>{/if}
 					</span>
 				</summary>
 				<form method="POST" use:enhance class="grid grid-cols-2 gap-2 border-t border-line px-4 py-3">
 					<input type="hidden" name="player" value={p.id} />
-					<button formaction="?/reset" class="btn btn-ghost text-xs">Nouveau code provisoire</button>
+					<button formaction="?/reset" class="btn btn-ghost text-xs">{t('admin.resetPin')}</button>
 					{#if !me}
 						{#if p.active}
-							<button formaction="?/deactivate" class="btn btn-ghost text-xs">Désactiver</button>
+							<button formaction="?/deactivate" class="btn btn-ghost text-xs">{t('admin.deactivate')}</button>
 						{:else}
-							<button formaction="?/activate" class="btn btn-ghost text-xs">Réactiver</button>
+							<button formaction="?/activate" class="btn btn-ghost text-xs">{t('admin.activate')}</button>
 						{/if}
 						{#if p.isAdmin}
-							<button formaction="?/demote" class="btn btn-ghost text-xs">Retirer admin</button>
+							<button formaction="?/demote" class="btn btn-ghost text-xs">{t('admin.demote')}</button>
 						{:else}
-							<button formaction="?/promote" class="btn btn-ghost text-xs">Nommer admin</button>
+							<button formaction="?/promote" class="btn btn-ghost text-xs">{t('admin.promote')}</button>
 						{/if}
 					{/if}
 				</form>
@@ -118,15 +119,15 @@
 		{/each}
 	</div>
 	<p class="mt-2 text-xs text-muted">
-		Un joueur désactivé est déconnecté, garde son historique et n’entre plus dans les nouvelles semaines.
+		{t('admin.deactivateHint')}
 	</p>
 </section>
 
 <!-- Backup -->
 <section>
-	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">Sauvegarde</h2>
-	<a href="/admin/sauvegarde" class="btn btn-ghost w-full" data-sveltekit-reload>Télécharger toute la ligue (.db)</a>
+	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('admin.backup')}</h2>
+	<a href="/admin/sauvegarde" class="btn btn-ghost w-full" data-sveltekit-reload>{t('admin.download')}</a>
 	<p class="mt-2 text-xs text-muted">
-		Un seul fichier : joueurs, parties, rois. À garder privé. Pour le restaurer ou changer de serveur, voir le README.
+		{t('admin.backupHint')}
 	</p>
 </section>

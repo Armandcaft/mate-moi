@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import { ProfileError, rename, setSlogan } from '#lib/server/profile.ts';
+import { say, type Locale } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => ({
@@ -7,11 +8,11 @@ export const load: PageServerLoad = ({ locals }) => ({
 	slogan: locals.player!.slogan ?? ''
 });
 
-async function attempt(fn: () => Record<string, unknown>) {
+async function attempt(locale: Locale, fn: () => Record<string, unknown>) {
 	try {
 		return fn();
 	} catch (e) {
-		if (e instanceof ProfileError) return fail(400, { message: e.message });
+		if (e instanceof ProfileError) return fail(400, { message: say(locale, e) });
 		throw e;
 	}
 }
@@ -20,11 +21,11 @@ export const actions: Actions = {
 	name: async ({ request, locals }) => {
 		if (!locals.player) error(401);
 		const raw = String((await request.formData()).get('name') ?? '');
-		return attempt(() => ({ saved: 'name', value: rename(locals.player!.id, raw) }));
+		return attempt(locals.locale, () => ({ saved: 'name', value: rename(locals.player!.id, raw) }));
 	},
 	slogan: async ({ request, locals }) => {
 		if (!locals.player) error(401);
 		const raw = String((await request.formData()).get('slogan') ?? '');
-		return attempt(() => ({ saved: 'slogan', value: setSlogan(locals.player!.id, raw) }));
+		return attempt(locals.locale, () => ({ saved: 'slogan', value: setSlogan(locals.player!.id, raw) }));
 	}
 };

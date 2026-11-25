@@ -4,6 +4,7 @@ import { clearFailures, createSession, lockMessage, lockedFor, recordFailure } f
 import { db, players } from '#lib/server/db/index.ts';
 import { activePlayers } from '#lib/server/league.ts';
 import { verifyPin } from '#lib/server/pin.ts';
+import { say } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -12,21 +13,21 @@ export const load: PageServerLoad = ({ locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, cookies, url }) => {
+	default: async ({ request, cookies, url, locals }) => {
 		const form = await request.formData();
 		const playerId = Number(form.get('player'));
 		const pin = String(form.get('pin') ?? '');
 
 		const player = db.select().from(players).where(eq(players.id, playerId)).get();
-		if (!player || !player.active) return fail(400, { playerId, message: 'Choisis ton nom.' });
+		if (!player || !player.active) return fail(400, { playerId, message: say(locals.locale, { key: 'login.chooseName' }) });
 
 		const wait = lockedFor(player);
-		if (wait > 0) return fail(429, { playerId, message: lockMessage(wait) });
+		if (wait > 0) return fail(429, { playerId, message: say(locals.locale, lockMessage(wait)) });
 
 		if (!verifyPin(pin, player.pinHash)) {
 			const locked = recordFailure(player.id);
-			if (locked) return fail(429, { playerId, message: lockMessage(locked) });
-			return fail(400, { playerId, message: 'Code incorrect.' });
+			if (locked) return fail(429, { playerId, message: say(locals.locale, lockMessage(locked)) });
+			return fail(400, { playerId, message: say(locals.locale, { key: 'login.wrongCode' }) });
 		}
 
 		clearFailures(player.id);

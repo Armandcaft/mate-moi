@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-A private weekly chess league for three friends (French UI). SvelteKit 3 + Svelte 5 runes,
+A private weekly chess league for three friends (French UI, also in English and German). SvelteKit 3 + Svelte 5 runes,
 SQLite via Drizzle (`better-sqlite3`), Tailwind 4, adapter-node, deployed to Fly.io with a volume.
 
 ## Commands
@@ -35,9 +35,15 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   `joinerSchedule`'s games so the week stays a full round-robin); after that, the next week.
 - Games per opponent: `gamesPerPairFor(players)` when a week starts (3 / 2 / 1 by group size); a
   joiner plays the running week's own count, read back with `gamesPerPairIn`, never the new size's.
+- `src/lib/i18n/` — French (default and fallback), English, German. `fr.ts` is the source of truth;
+  `en.ts`/`de.ts` are typed against it, so a missing key fails `npm run check`. Components call
+  `t('key', params)` from `t.svelte.ts`; server code throws or returns a `Problem` (a key + params)
+  and the action translates it with `say(locals.locale, …)`. The language: `mm_lang` cookie (set by
+  `/lang`), else Accept-Language; WhatsApp previews (`/partage`, `/og`) take `?lang=`, else French.
+  **Every new user-facing string goes into all three dictionaries.**
 - Restore = `restore.db` next to the database, swapped in by `docker-entrypoint.sh` at start-up.
 - `src/lib/server/og.ts` + `/partage/[key]` and `/og/[key].png` — the WhatsApp link preview
-  (Satori + resvg). **Public, with `/login` and `/invitation/`**, listed in `hooks.server.ts`; they
+  (Satori + resvg). **Public, with `/login`, `/lang` and `/invitation/`**, listed in `hooks.server.ts`; they
   show the latest standings and nothing else. `key` changes with each confirmed result so
   WhatsApp, which caches previews per link, refetches.
 
@@ -46,6 +52,6 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
 - SvelteKit 3: import from `#lib/...` with the file extension (`#lib/server/league.ts`);
   `Handle` comes from `@sveltejs/kit/hooks`.
 - Only a **confirmed** result counts (`toGame` in `league.ts` hides unconfirmed ones from the engine).
-- Answer "no such game" and "not your game" identically (`Partie introuvable.`).
+- Answer "no such game" and "not your game" identically (`league.gameNotFound`, « Partie introuvable. »).
 - Theme tokens live in `src/app.css` (`@theme`). Gold is for the king and the main action only.
 - No personal data in the repo: names and PINs live in the database; `PIN_PEPPER` is a Fly secret.

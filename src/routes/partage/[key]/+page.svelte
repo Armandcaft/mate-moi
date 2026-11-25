@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '#lib/i18n/t.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -7,7 +8,7 @@
 <svelte:head>
 	<title>{data.title}</title>
 	<meta property="og:type" content="website" />
-	<meta property="og:site_name" content="Mate-Moi si tu peux" />
+	<meta property="og:site_name" content={t('app.name')} />
 	<meta property="og:title" content={data.title} />
 	<meta property="og:description" content={data.description} />
 	<meta property="og:image" content={data.image} />
@@ -18,4 +19,4 @@
 	<meta http-equiv="refresh" content="0; url=/" />
 </svelte:head>
 
-<p class="pt-10 text-center text-sm text-muted"><a href="/">Ouvrir Mate-Moi…</a></p>
+<p class="pt-10 text-center text-sm text-muted"><a href="/">{t('preview.open')}</a></p>

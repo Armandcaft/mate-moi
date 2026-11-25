@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { describe, score, STAGE_LABEL } from '#lib/format.ts';
+	import { describe, score } from '#lib/format.ts';
+	import { t } from '#lib/i18n/t.svelte.ts';
 	import type { GameRow } from '#lib/server/db/schema.ts';
 
 	let {
@@ -38,35 +39,35 @@
 >
 	<div class="mb-3 flex items-center justify-between text-[11px] tracking-wider text-muted uppercase">
 		<span>
-			{STAGE_LABEL[game.stage]} · {game.stage === 'group' ? `Manche ${game.round}` : `Partie ${game.round}`}
+			{t(`stage.${game.stage}`)} · {t(game.stage === 'group' ? 'game.round' : 'game.game', { n: game.round })}
 		</span>
 		{#if game.armageddon}<span class="text-gold">Armageddon</span>{/if}
 	</div>
 
 	<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
 		<div class="flex items-center gap-2 truncate">
-			<span class="size-3 shrink-0 rounded-full border border-silver/70 bg-silver" title="Blancs"></span>
+			<span class="size-3 shrink-0 rounded-full border border-silver/70 bg-silver" title={t('game.white')}></span>
 			<span class="truncate font-medium {winnerId === game.whiteId ? 'text-gold' : ''} {game.whiteId === meId ? 'underline decoration-line underline-offset-4' : ''}">{white}</span>
 		</div>
 		<span class="font-display text-sm text-muted tabular-nums">
-			{confirmed && game.result ? score(game.result) : 'vs'}
+			{confirmed && game.result ? score(game.result) : t('common.vs')}
 		</span>
 		<div class="flex items-center justify-end gap-2 truncate">
 			<span class="truncate font-medium {winnerId === game.blackId ? 'text-gold' : ''} {game.blackId === meId ? 'underline decoration-line underline-offset-4' : ''}">{black}</span>
-			<span class="size-3 shrink-0 rounded-full border border-silver/70 bg-board" title="Noirs"></span>
+			<span class="size-3 shrink-0 rounded-full border border-silver/70 bg-board" title={t('game.black')}></span>
 		</div>
 	</div>
 
 	{#if open && pending && game.result}
 		<p class="mt-3 text-center text-sm text-muted">
-			Déclaré : <span class="text-silver">{describe(game.result, white, black)}</span>
-			{#if !iMustConfirm}· en attente de {opponent}{/if}
+			{t('game.declared')} <span class="text-silver">{describe(t, game.result, white, black)}</span>
+			{#if !iMustConfirm}· {t('game.waitingFor', { name: opponent })}{/if}
 		</p>
 		{#if iMustConfirm}
 			<form method="POST" class="mt-3 grid grid-cols-2 gap-2" use:enhance={submit}>
 				<input type="hidden" name="game" value={game.id} />
-				<button formaction="?/reject" class="btn btn-ghost" disabled={busy}>Contester</button>
-				<button formaction="?/confirm" class="btn btn-gold" disabled={busy}>Confirmer</button>
+				<button formaction="?/reject" class="btn btn-ghost" disabled={busy}>{t('game.dispute')}</button>
+				<button formaction="?/confirm" class="btn btn-gold" disabled={busy}>{t('game.confirm')}</button>
 			</form>
 		{/if}
 	{:else if open && !game.result && mine}
@@ -74,12 +75,12 @@
 			<input type="hidden" name="game" value={game.id} />
 			<button name="result" value="1-0" class="btn btn-ghost truncate" disabled={busy}>{white}</button>
 			{#if !game.armageddon}
-				<button name="result" value="1/2-1/2" class="btn btn-ghost" disabled={busy}>Nulle</button>
+				<button name="result" value="1/2-1/2" class="btn btn-ghost" disabled={busy}>{t('game.draw')}</button>
 			{/if}
 			<button name="result" value="0-1" class="btn btn-ghost truncate" disabled={busy}>{black}</button>
 		</form>
 		<p class="mt-2 text-center text-[11px] text-muted">
-			{game.armageddon ? 'Qui a gagné ? Une nulle compte comme une victoire des Noirs.' : 'Qui a gagné ?'}
+			{t(game.armageddon ? 'game.whoWonArmageddon' : 'game.whoWon')}
 		</p>
 	{/if}
 </article>

@@ -4,13 +4,22 @@ import { randomBytes, randomInt } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { MessageKey, Params, Problem } from '../i18n/index.ts';
 import { sha256 } from './auth.ts';
 import { db, invites, players, sessions, sqlite, type Player } from './db/index.ts';
 import { joinCurrentWeek } from './league.ts';
 import { hashPin, newPinProblem } from './pin.ts';
 import { ProfileError, checkedName } from './profile.ts';
 
-export class AdminError extends Error {}
+/** A refusal, carrying a message key: the page puts it in the player's language. */
+export class AdminError extends Error implements Problem {
+	constructor(
+		readonly key: MessageKey,
+		readonly params?: Params
+	) {
+		super(key);
+	}
+}
 
 const INVITE_HOURS = 48;
 
@@ -58,7 +67,7 @@ export function acceptInvite(
 	pin: string
 ): { id: number; week: 'joined' | 'next-week' } {
 	const problem = newPinProblem(pin);
-	if (problem) throw new AdminError(problem);
+	if (problem) throw new AdminError(problem.key, problem.params);
 
 	return db.transaction((tx) => {
 		const invite = tx
@@ -66,13 +75,13 @@ export function acceptInvite(
 			.from(invites)
 			.where(and(eq(invites.id, sha256(token)), isNull(invites.usedAt), gt(invites.expiresAt, new Date())))
 			.get();
-		if (!invite) throw new AdminError('Cette invitation a expiré ou a déjà servi.');
+		if (!invite) throw new AdminError('invite.expired');
 
 		let name: string;
 		try {
 			name = checkedName(tx, rawName);
 		} catch (e) {
-			if (e instanceof ProfileError) throw new AdminError(e.message);
+			if (e instanceof ProfileError) throw new AdminError(e.key, e.params);
 			throw e;
 		}
 
@@ -121,7 +130,7 @@ export function resetPin(playerId: number): string {
 			.set({ pinHash: hashPin(temp), mustChangePin: true, failedLogins: 0, lockedUntil: null })
 			.where(eq(players.id, playerId))
 			.run();
-		if (!done.changes) throw new AdminError('Joueur introuvable.');
+		if (!done.changes) throw new AdminError('admin.playerNotFound');
 		tx.delete(sessions).where(eq(sessions.playerId, playerId)).run();
 	});
 	return temp;
@@ -129,7 +138,7 @@ export function resetPin(playerId: number): string {
 
 /** Changes to someone else's account only: an admin cannot lock themselves out by mistake. */
 function guardOther(actorId: number, playerId: number) {
-	if (actorId === playerId) throw new AdminError('Pas sur ton propre compte.');
+	if (actorId === playerId) throw new AdminError('admin.notYourself');
 }
 
 export function setActive(actorId: number, playerId: number, active: boolean) {

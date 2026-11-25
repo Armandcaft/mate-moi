@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Crown from '#lib/components/Crown.svelte';
+	import { dateLocale, t } from '#lib/i18n/t.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -11,15 +12,15 @@
 		[...data.crowns.entries()].sort((a, b) => b[1] - a[1]).map(([id, n]) => ({ id, n }))
 	);
 	const active = $derived(data.players.filter((p) => p.active));
-	const fmt = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+	const fmt = $derived(new Intl.DateTimeFormat(dateLocale(), { day: 'numeric', month: 'short' }));
 </script>
 
-<svelte:head><title>Les Rois · Mate-Moi</title></svelte:head>
+<svelte:head><title>{t('kings.title')} · {t('app.short')}</title></svelte:head>
 
-<h1 class="font-display mb-5 text-2xl font-bold text-silver">Les Rois</h1>
+<h1 class="font-display mb-5 text-2xl font-bold text-silver">{t('kings.title')}</h1>
 
 {#if data.reigns.length === 0}
-	<p class="card px-5 py-8 text-center text-sm text-muted">Aucun roi couronné pour l’instant.</p>
+	<p class="card px-5 py-8 text-center text-sm text-muted">{t('kings.none')}</p>
 {:else}
 	<!-- Crowns -->
 	<section class="mb-6 grid grid-cols-3 gap-2">
@@ -28,9 +29,9 @@
 				<Crown size={i === 0 ? 30 : 22} class="mx-auto mb-2 {i === 0 ? '' : 'opacity-60 grayscale'}" />
 				<p class="truncate font-medium {i === 0 ? 'text-gold' : 'text-silver'}">{name(p.id)}</p>
 				{#if slogans.get(p.id)}
-					<p class="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted italic">« {slogans.get(p.id)} »</p>
+					<p class="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted italic">{t('common.quote', { text: slogans.get(p.id) ?? '' })}</p>
 				{/if}
-				<p class="text-xs text-muted">{p.n} couronne{p.n > 1 ? 's' : ''}</p>
+				<p class="text-xs text-muted">{t('kings.crowns', { n: p.n })}</p>
 			</div>
 		{/each}
 	</section>
@@ -39,7 +40,7 @@
 	<section class="card mb-6 divide-y divide-line/60">
 		{#each data.reigns as r (r.number)}
 			<div class="flex items-center justify-between px-4 py-3 text-sm">
-				<span class="text-muted">Semaine {r.number}{r.closedAt ? ` · ${fmt.format(r.closedAt)}` : ''}</span>
+				<span class="text-muted">{t('week.label', { n: r.number })}{r.closedAt ? ` · ${fmt.format(r.closedAt)}` : ''}</span>
 				<span class="inline-flex items-center gap-1.5 font-medium text-silver">
 					<Crown size={14} />{name(r.kingId)}
 				</span>
@@ -48,17 +49,17 @@
 	</section>
 {/if}
 
-<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">Classement général · phase de groupes</h2>
+<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('kings.allTime')}</h2>
 <section class="card mb-6 overflow-hidden">
 	<table class="w-full text-sm tabular-nums">
 		<thead class="text-[11px] tracking-wider text-muted uppercase">
 			<tr class="border-b border-line">
-				<th class="py-2.5 pl-4 text-left font-medium">Joueur</th>
-				<th class="py-2.5 text-center font-medium">J</th>
-				<th class="py-2.5 text-center font-medium">V</th>
-				<th class="py-2.5 text-center font-medium">N</th>
-				<th class="py-2.5 text-center font-medium">D</th>
-				<th class="py-2.5 pr-4 text-right font-medium">Pts</th>
+				<th class="py-2.5 pl-4 text-left font-medium">{t('table.player')}</th>
+				<th class="py-2.5 text-center font-medium" title={t('table.playedTitle')}>{t('table.played')}</th>
+				<th class="py-2.5 text-center font-medium" title={t('table.winsTitle')}>{t('table.wins')}</th>
+				<th class="py-2.5 text-center font-medium" title={t('table.drawsTitle')}>{t('table.draws')}</th>
+				<th class="py-2.5 text-center font-medium" title={t('table.lossesTitle')}>{t('table.losses')}</th>
+				<th class="py-2.5 pr-4 text-right font-medium">{t('table.points')}</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -72,14 +73,14 @@
 					<td class="py-3 pr-4 text-right font-semibold text-silver">{l.points}</td>
 				</tr>
 			{:else}
-				<tr><td colspan="6" class="px-4 py-6 text-center text-muted">Pas encore de partie confirmée.</td></tr>
+				<tr><td colspan="6" class="px-4 py-6 text-center text-muted">{t('kings.noGames')}</td></tr>
 			{/each}
 		</tbody>
 	</table>
 </section>
 
 {#if active.length > 1}
-	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">Face à face · V-N-D, toutes phases</h2>
+	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('kings.headToHead')}</h2>
 	<section class="card overflow-x-auto">
 		<table class="w-full text-sm tabular-nums">
 			<thead>

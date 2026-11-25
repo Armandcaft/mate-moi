@@ -12,11 +12,17 @@ import {
 	type Result,
 	type Step
 } from '../tournament';
+import type { MessageKey, Problem } from '../i18n/index.ts';
 import { db, games, players, weeks, type GameRow, type Player, type Week } from './db';
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-export class LeagueError extends Error {}
+/** A refusal, carrying a message key: the page puts it in the player's language. */
+export class LeagueError extends Error implements Problem {
+	constructor(readonly key: MessageKey) {
+		super(key);
+	}
+}
 
 /**
  * What other players may see about someone. Pages send their data to the browser, so a query
@@ -150,10 +156,10 @@ export function hall(): Hall {
 export function startWeek(): Week {
 	return db.transaction((tx) => {
 		const open = tx.select().from(weeks).where(isNull(weeks.closedAt)).get();
-		if (open) throw new LeagueError('La semaine en cours n’est pas terminée.');
+		if (open) throw new LeagueError('league.weekNotOver');
 
 		const ids = tx.select({ id: players.id }).from(players).where(eq(players.active, true)).all();
-		if (ids.length < 2) throw new LeagueError('Il faut au moins deux joueurs.');
+		if (ids.length < 2) throw new LeagueError('league.needTwoPlayers');
 
 		const last = tx.select().from(weeks).orderBy(desc(weeks.number)).limit(1).get();
 		const number = (last?.number ?? 0) + 1;
@@ -175,10 +181,10 @@ function loadForUpdate(tx: Tx, gameId: number, playerId: number) {
 	const game = tx.select().from(games).where(eq(games.id, gameId)).get();
 	// The same answer for "no such game" and "not your game": it tells a stranger nothing.
 	if (!game || (game.whiteId !== playerId && game.blackId !== playerId))
-		throw new LeagueError('Partie introuvable.');
+		throw new LeagueError('league.gameNotFound');
 	const week = tx.select().from(weeks).where(eq(weeks.id, game.weekId)).get()!;
-	if (week.closedAt) throw new LeagueError('Cette semaine est terminée.');
-	if (game.confirmedAt) throw new LeagueError('Ce résultat est déjà confirmé.');
+	if (week.closedAt) throw new LeagueError('league.weekOver');
+	if (game.confirmedAt) throw new LeagueError('league.alreadyConfirmed');
 	return game;
 }
 
@@ -187,7 +193,7 @@ export function reportResult(gameId: number, playerId: number, result: Result) {
 	db.transaction((tx) => {
 		const game = loadForUpdate(tx, gameId, playerId);
 		if (game.armageddon && result === '1/2-1/2')
-			throw new LeagueError('En Armageddon, la nulle compte comme une victoire des Noirs.');
+			throw new LeagueError('league.armageddonDraw');
 		tx.update(games)
 			.set({ result, reportedById: playerId, reportedAt: new Date(), confirmedAt: null })
 			.where(eq(games.id, gameId))
@@ -198,9 +204,9 @@ export function reportResult(gameId: number, playerId: number, result: Result) {
 export function confirmResult(gameId: number, playerId: number) {
 	db.transaction((tx) => {
 		const game = loadForUpdate(tx, gameId, playerId);
-		if (!game.result) throw new LeagueError('Aucun résultat à confirmer.');
+		if (!game.result) throw new LeagueError('league.nothingToConfirm');
 		if (game.reportedById === playerId)
-			throw new LeagueError('C’est à ton adversaire de confirmer.');
+			throw new LeagueError('league.opponentConfirms');
 		tx.update(games).set({ confirmedAt: new Date() }).where(eq(games.id, gameId)).run();
 		advance(tx, game.weekId);
 	});
@@ -211,7 +217,7 @@ export function rejectResult(gameId: number, playerId: number) {
 	db.transaction((tx) => {
 		const game = loadForUpdate(tx, gameId, playerId);
 		if (!game.result || game.reportedById === playerId)
-			throw new LeagueError('Aucun résultat à contester.');
+			throw new LeagueError('league.nothingToDispute');
 		tx.update(games)
 			.set({ result: null, reportedById: null, reportedAt: null })
 			.where(and(eq(games.id, gameId), isNull(games.confirmedAt)))

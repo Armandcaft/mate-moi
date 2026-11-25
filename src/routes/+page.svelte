@@ -3,7 +3,8 @@
 	import { page } from '$app/state';
 	import Crown from '#lib/components/Crown.svelte';
 	import GameCard from '#lib/components/GameCard.svelte';
-	import { PHASE_LABEL, pts, whatsapp } from '#lib/format.ts';
+	import { whatsapp } from '#lib/format.ts';
+	import { locale, t } from '#lib/i18n/t.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -35,11 +36,13 @@
 		if (!view) return '';
 		const head =
 			step?.phase === 'done'
-				? `♔ ${name(step.king)} est le Roi de la Semaine ${view.week.number} ! Qui ose le détrôner ?`
-				: `♔ Mate-Moi si tu peux · Semaine ${view.week.number} · ${PHASE_LABEL[step!.phase]}`;
-		const lines = view.standings.map((l) => `${l.rank}. ${name(l.playerId)}  ${pts(l.points)}`);
-		// The link last: WhatsApp previews it with the standings image (/partage → /og).
-		return [head, '', ...lines, '', `${page.url.origin}/partage/${data.shareKey}`].join('\n');
+				? t('week.shareKing', { name: name(step.king), n: view.week.number })
+				: `♔ ${t('app.name')} · ${t('week.label', { n: view.week.number })} · ${t(`phase.${step!.phase}`)}`;
+		const lines = view.standings.map((l) => `${l.rank}. ${name(l.playerId)}  ${t('common.pts', { n: l.points })}`);
+		// The link last: WhatsApp previews it with the standings image (/partage → /og), in the
+		// sharer's language (WhatsApp sends no cookies, so it rides in the link).
+		const link = `${page.url.origin}/partage/${data.shareKey}?lang=${locale()}`;
+		return [head, '', ...lines, '', link].join('\n');
 	});
 
 	let starting = $state(false);
@@ -49,17 +52,17 @@
 	const benched = $derived(!!view && !view.week.closedAt && !view.players.has(me.id));
 </script>
 
-<svelte:head><title>Semaine {view?.week.number ?? ''} · Mate-Moi</title></svelte:head>
+<svelte:head><title>{t('week.label', { n: view?.week.number ?? '' })} · {t('app.short')}</title></svelte:head>
 
 {#if benched}
 	<p class="card mb-4 border-gold/40 px-4 py-3 text-sm text-silver" role="status">
-		<span class="text-gold">Bienvenue, {me.name}.</span> La phase de groupes de cette semaine est
-		terminée : tu entres en jeu à la prochaine. En attendant, suis la finale.
+		<span class="text-gold">{t('week.welcome', { name: me.name })}</span>
+		{t('week.benched')}
 	</p>
 {:else if welcome}
 	<p class="card mb-4 border-gold/40 px-4 py-3 text-sm text-silver" role="status">
-		<span class="text-gold">Bienvenue, {me.name}.</span> Tu entres dans la semaine en cours : tes
-		{todo.length} parties sont dans « À toi de jouer ».
+		<span class="text-gold">{t('week.welcome', { name: me.name })}</span>
+		{t('week.joined', { n: todo.length })}
 	</p>
 {/if}
 
@@ -86,23 +89,22 @@
 {#if !view}
 	<section class="card px-6 py-10 text-center">
 		<Crown size={48} class="mx-auto mb-4" />
-		<h1 class="font-display text-2xl font-bold text-silver">Le trône est vide.</h1>
+		<h1 class="font-display text-2xl font-bold text-silver">{t('week.emptyThrone')}</h1>
 		<p class="mx-auto mt-2 mb-6 max-w-xs text-sm text-muted">
-			Chacun affronte chacun (3 parties par adversaire jusqu’à 4 joueurs, 2 jusqu’à 6, puis 1), puis
-			une finale entre les deux meilleurs.
+			{t('week.rules')}
 		</p>
-		{@render startButton('Lancer la semaine 1')}
+		{@render startButton(t('week.start', { n: 1 }))}
 	</section>
 {:else}
 	<div class="mb-5 flex items-end justify-between">
 		<div>
-			<p class="text-xs tracking-[0.2em] text-muted uppercase">Semaine {view.week.number}</p>
-			<h1 class="font-display text-2xl font-bold text-silver">{PHASE_LABEL[step!.phase]}</h1>
+			<p class="text-xs tracking-[0.2em] text-muted uppercase">{t('week.label', { n: view.week.number })}</p>
+			<h1 class="font-display text-2xl font-bold text-silver">{t(`phase.${step!.phase}`)}</h1>
 		</div>
 		{#if step?.phase === 'group'}
 			<div class="text-right whitespace-nowrap">
-				<p class="text-sm text-muted tabular-nums">{played} / {groupGames.length} parties</p>
-				<p class="text-xs text-muted/80">{view.gamesPerPair} par adversaire</p>
+				<p class="text-sm text-muted tabular-nums">{t('week.progress', { played, n: groupGames.length })}</p>
+				<p class="text-xs text-muted/80">{t('week.perOpponent', { n: view.gamesPerPair })}</p>
 			</div>
 		{/if}
 	</div>
@@ -111,22 +113,22 @@
 		<section class="king-reveal card relative mb-5 overflow-hidden border-gold/50 px-6 py-8 text-center">
 			<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(201,162,74,0.22),transparent_65%)]"></div>
 			<div class="crown-drop relative"><Crown size={56} class="mx-auto mb-3" /></div>
-			<p class="relative text-xs tracking-[0.25em] text-gold uppercase">Roi de la Semaine {view.week.number}</p>
+			<p class="relative text-xs tracking-[0.25em] text-gold uppercase">{t('week.king', { n: view.week.number })}</p>
 			<p class="font-display text-gold-gradient relative mt-1 text-4xl font-bold">{name(step.king)}</p>
 			{#if view.players.get(step.king)?.slogan}
-				<p class="relative mt-2 text-sm text-silver/90 italic">« {view.players.get(step.king)?.slogan} »</p>
+				<p class="relative mt-2 text-sm text-silver/90 italic">{t('common.quote', { text: view.players.get(step.king)?.slogan ?? '' })}</p>
 			{/if}
 		</section>
 	{:else if step?.phase === 'playoff'}
 		<section class="card mb-5 border-gold/30 px-4 py-3 text-sm">
-			<span class="text-gold">Égalité.</span>
-			{step.contenders.map(name).join(', ')} se départagent en Armageddon (la nulle compte pour les Noirs).
+			<span class="text-gold">{t('week.tie')}</span>
+			{t('week.playoff', { names: step.contenders.map(name).join(', ') })}
 		</section>
 	{:else if step?.phase === 'final'}
 		<section class="card mb-5 border-gold/30 px-4 py-4 text-center">
-			<p class="text-xs tracking-[0.2em] text-gold uppercase">Pour la couronne</p>
+			<p class="text-xs tracking-[0.2em] text-gold uppercase">{t('week.forTheCrown')}</p>
 			<p class="font-display mt-1 text-xl font-bold text-silver">
-				{name(step.finalists[0])} <span class="text-muted">vs</span> {name(step.finalists[1])}
+				{name(step.finalists[0])} <span class="text-muted">{t('common.vs')}</span> {name(step.finalists[1])}
 			</p>
 		</section>
 	{/if}
@@ -137,12 +139,12 @@
 			<thead class="text-[11px] tracking-wider text-muted uppercase">
 				<tr class="border-b border-line">
 					<th class="py-2.5 pl-4 text-left font-medium">#</th>
-					<th class="py-2.5 text-left font-medium">Joueur</th>
-					<th class="py-2.5 text-center font-medium" title="Parties jouées">J</th>
-					<th class="py-2.5 text-center font-medium" title="Victoires">V</th>
-					<th class="py-2.5 text-center font-medium" title="Nulles">N</th>
-					<th class="py-2.5 text-center font-medium" title="Défaites">D</th>
-					<th class="py-2.5 pr-4 text-right font-medium">Pts</th>
+					<th class="py-2.5 text-left font-medium">{t('table.player')}</th>
+					<th class="py-2.5 text-center font-medium" title={t('table.playedTitle')}>{t('table.played')}</th>
+					<th class="py-2.5 text-center font-medium" title={t('table.winsTitle')}>{t('table.wins')}</th>
+					<th class="py-2.5 text-center font-medium" title={t('table.drawsTitle')}>{t('table.draws')}</th>
+					<th class="py-2.5 text-center font-medium" title={t('table.lossesTitle')}>{t('table.losses')}</th>
+					<th class="py-2.5 pr-4 text-right font-medium">{t('table.points')}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -169,16 +171,16 @@
 
 	<div class="mb-8 grid gap-2 {step?.phase === 'done' ? 'grid-cols-2' : ''}">
 		<a href={whatsapp(shareText)} target="_blank" rel="noopener" class="btn btn-ghost">
-			{step?.phase === 'done' ? 'Partager' : 'Partager sur WhatsApp'}
+			{t(step?.phase === 'done' ? 'week.share' : 'week.shareWhatsapp')}
 		</a>
 		{#if step?.phase === 'done'}
-			{@render startButton(`Semaine ${view.week.number + 1}`)}
+			{@render startButton(t('week.label', { n: view.week.number + 1 }))}
 		{/if}
 	</div>
 
 	{#if todo.length}
 		<section class="mb-8">
-			<h2 class="mb-3 text-xs tracking-[0.2em] text-gold uppercase">À toi de jouer</h2>
+			<h2 class="mb-3 text-xs tracking-[0.2em] text-gold uppercase">{t('week.yourMove')}</h2>
 			<div class="grid gap-3">
 				{#each todo as game (game.id)}
 					<GameCard {game} names={view.players} meId={me.id} {open} />
@@ -189,7 +191,7 @@
 
 	{#if knockout.length}
 		<section class="mb-8">
-			<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">Barrage et finale</h2>
+			<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('week.knockout')}</h2>
 			<div class="grid gap-3">
 				{#each knockout.filter((g) => !todoIds.has(g.id)) as game (game.id)}
 					<GameCard {game} names={view.players} meId={me.id} {open} />
@@ -199,7 +201,7 @@
 	{/if}
 
 	<section>
-		<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">Phase de groupes</h2>
+		<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('phase.group')}</h2>
 		<div class="grid gap-3">
 			{#each groupGames.filter((g) => !todoIds.has(g.id)) as game (game.id)}
 				<GameCard {game} names={view.players} meId={me.id} {open} />

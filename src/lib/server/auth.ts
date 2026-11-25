@@ -1,6 +1,7 @@
 import type { Cookies } from '@sveltejs/kit';
 import { and, eq, gt, ne } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
+import type { Problem } from '../i18n/index.ts';
 import { db, players, sessions, type Player } from './db';
 
 export const SESSION_COOKIE = 'mm_session';
@@ -75,7 +76,7 @@ export function clearFailures(playerId: number) {
 	db.update(players).set({ failedLogins: 0, lockedUntil: null }).where(eq(players.id, playerId)).run();
 }
 
-export const lockMessage = (ms: number) => `Trop d’essais. Réessaie dans ${Math.ceil(ms / 60_000)} min.`;
+export const lockMessage = (ms: number): Problem => ({ key: 'login.locked', params: { min: Math.ceil(ms / 60_000) } });
 
 // ── Changing one's own code ─────────────────────────────────────────────────────
 

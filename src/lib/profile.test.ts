@@ -27,12 +27,12 @@ describe('slogans', () => {
 	it('allows 60 characters, emoji counting as one', () => {
 		expect(sloganProblem('x'.repeat(60))).toBeNull();
 		expect(sloganProblem('♔'.repeat(60))).toBeNull();
-		expect(sloganProblem('x'.repeat(61))).toMatch(/60/);
+		expect(sloganProblem('x'.repeat(61))).toEqual({ key: 'profile.sloganTooLong', params: { max: 60 } });
 	});
 
 	it('refuses links', () => {
-		expect(sloganProblem('va sur https://exemple.com')).toMatch(/liens/);
-		expect(sloganProblem('www.exemple.com')).toMatch(/liens/);
+		expect(sloganProblem('va sur https://exemple.com')).toEqual({ key: 'profile.sloganLink' });
+		expect(sloganProblem('www.exemple.com')).toEqual({ key: 'profile.sloganLink' });
 	});
 
 	it('accepts no slogan at all', () => {

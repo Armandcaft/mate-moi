@@ -37,14 +37,14 @@ describe('newPinProblem', () => {
 	});
 
 	it.each(['1234', '12345', '123456789', '12a456', ''])('rejects the length or format of "%s"', (pin) => {
-		expect(newPinProblem(pin)).toMatch(/6 à 8 chiffres/);
+		expect(newPinProblem(pin)).toEqual({ key: 'pin.length' });
 	});
 
 	it.each(['000000', '777777'])('rejects a repeated digit: %s', (pin) => {
-		expect(newPinProblem(pin)).toMatch(/répété/);
+		expect(newPinProblem(pin)).toEqual({ key: 'pin.repeated' });
 	});
 
 	it.each(['123456', '654321', '789012', '2109876'])('rejects a run: %s', (pin) => {
-		expect(newPinProblem(pin)).toMatch(/suite/);
+		expect(newPinProblem(pin)).toEqual({ key: 'pin.run' });
 	});
 });

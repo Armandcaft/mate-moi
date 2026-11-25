@@ -2,19 +2,20 @@
 	import '../app.css';
 	import { page } from '$app/state';
 	import Crown from '#lib/components/Crown.svelte';
+	import { t } from '#lib/i18n/t.svelte.ts';
 	import type { LayoutProps } from './$types';
 
 	let { children, data }: LayoutProps = $props();
 
 	const nav = $derived([
-		{ href: '/', label: 'La semaine' },
-		{ href: '/rois', label: 'Les Rois' },
-		...(data.me?.isAdmin ? [{ href: '/admin', label: 'Admin' }] : [])
+		{ href: '/', label: t('nav.week') },
+		{ href: '/rois', label: t('nav.kings') },
+		...(data.me?.isAdmin ? [{ href: '/admin', label: t('nav.admin') }] : [])
 	]);
 </script>
 
 <svelte:head>
-	<title>Mate-Moi si tu peux</title>
+	<title>{t('app.name')}</title>
 </svelte:head>
 
 <div class="mx-auto flex min-h-dvh max-w-xl flex-col">
@@ -23,15 +24,15 @@
 			<a href="/" class="flex items-center gap-2.5">
 				<Crown size={26} />
 				<span class="font-display text-gold-gradient text-lg font-bold tracking-wide sm:text-xl">
-					Mate-Moi si tu peux
+					{t('app.name')}
 				</span>
 			</a>
 			{#if data.me}
 				<div class="flex items-center gap-1 text-xs text-muted">
-					<a href="/profil" class="hover:text-silver" title="Mon profil">{data.me.name}</a>
+					<a href="/profil" class="hover:text-silver" title={t('nav.profile')}>{data.me.name}</a>
 					<span aria-hidden="true">·</span>
 					<form method="POST" action="/logout">
-						<button class="hover:text-silver" title="Se déconnecter">sortir</button>
+						<button class="hover:text-silver" title={t('nav.logoutTitle')}>{t('nav.logout')}</button>
 					</form>
 				</div>
 			{/if}

@@ -9,11 +9,12 @@ import {
 	setActive,
 	setAdmin
 } from '#lib/server/admin.ts';
+import { say, translator } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 
 /** Admins only. Others get the same 404 as a page that does not exist. */
 function admin(locals: App.Locals) {
-	if (!locals.player?.isAdmin) error(404, 'Page introuvable');
+	if (!locals.player?.isAdmin) error(404, translator(locals.locale)('common.pageNotFound'));
 	return locals.player;
 }
 
@@ -32,7 +33,7 @@ async function onPlayer(
 	try {
 		return fn(me.id, playerId) ?? undefined;
 	} catch (e) {
-		if (e instanceof AdminError) return fail(400, { message: e.message });
+		if (e instanceof AdminError) return fail(400, { message: say(locals.locale, e) });
 		throw e;
 	}
 }

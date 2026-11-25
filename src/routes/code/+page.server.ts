@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { lockMessage, lockedFor, recordFailure, setOwnPin } from '#lib/server/auth.ts';
 import { db, players } from '#lib/server/db/index.ts';
 import { hashPin, newPinProblem, verifyPin } from '#lib/server/pin.ts';
+import { say } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => ({
@@ -22,17 +23,17 @@ export const actions: Actions = {
 
 		// A stolen, still-open session must not let someone guess the code here either.
 		const wait = lockedFor(me);
-		if (wait > 0) return fail(429, { message: lockMessage(wait) });
+		if (wait > 0) return fail(429, { message: say(locals.locale, lockMessage(wait)) });
 		if (!verifyPin(current, me.pinHash)) {
 			const locked = recordFailure(me.id);
-			if (locked) return fail(429, { message: lockMessage(locked) });
-			return fail(400, { message: 'Code actuel incorrect.' });
+			if (locked) return fail(429, { message: say(locals.locale, lockMessage(locked)) });
+			return fail(400, { message: say(locals.locale, { key: 'code.wrongCurrent' }) });
 		}
 
 		const problem = newPinProblem(next);
-		if (problem) return fail(400, { message: problem });
-		if (next !== confirm) return fail(400, { message: 'Les deux nouveaux codes ne correspondent pas.' });
-		if (next === current) return fail(400, { message: 'Choisis un code différent de l’actuel.' });
+		if (problem) return fail(400, { message: say(locals.locale, problem) });
+		if (next !== confirm) return fail(400, { message: say(locals.locale, { key: 'code.mismatch' }) });
+		if (next === current) return fail(400, { message: say(locals.locale, { key: 'code.same' }) });
 
 		setOwnPin(cookies, me.id, hashPin(next));
 		if (me.mustChangePin) redirect(303, '/');
