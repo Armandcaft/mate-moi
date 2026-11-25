@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import Crown from '#lib/components/Crown.svelte';
 	import GameCard from '#lib/components/GameCard.svelte';
-	import { PHASE_LABEL, whatsapp } from '#lib/format.ts';
+	import { PHASE_LABEL, pts, whatsapp } from '#lib/format.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -36,8 +37,9 @@
 			step?.phase === 'done'
 				? `♔ ${name(step.king)} est le Roi de la Semaine ${view.week.number} ! Qui ose le détrôner ?`
 				: `♔ Mate-Moi si tu peux · Semaine ${view.week.number} · ${PHASE_LABEL[step!.phase]}`;
-		const lines = view.standings.map((l) => `${l.rank}. ${name(l.playerId)}  ${l.points} pts`);
-		return [head, '', ...lines].join('\n');
+		const lines = view.standings.map((l) => `${l.rank}. ${name(l.playerId)}  ${pts(l.points)}`);
+		// The link last: WhatsApp previews it with the standings image (/partage → /og).
+		return [head, '', ...lines, '', `${page.url.origin}/partage/${data.shareKey}`].join('\n');
 	});
 
 	let starting = $state(false);

@@ -19,3 +19,5 @@ export const score = (result: Result) => (result === '1/2-1/2' ? '½ – ½' : r
 
 /** A link that opens WhatsApp with `text` ready to send to the group. */
 export const whatsapp = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+export const pts = (n: number) => `${n} pt${n === 1 || n === 0 ? '' : 's'}`;

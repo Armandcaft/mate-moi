@@ -8,12 +8,14 @@ import {
 	startWeek,
 	weekView
 } from '#lib/server/league.ts';
+import { shareKey } from '#lib/server/og.ts';
 import type { Result } from '#lib/tournament/types.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {
 	const week = latestWeek();
-	return { view: week ? weekView(week) : null };
+	const view = week ? weekView(week) : null;
+	return { view, shareKey: shareKey(view) };
 };
 
 const RESULTS: Result[] = ['1-0', '0-1', '1/2-1/2'];

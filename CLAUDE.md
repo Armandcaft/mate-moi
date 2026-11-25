@@ -22,6 +22,10 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   `confirmResult` calls `advance`, which inserts whatever `nextStep` asks for or crowns the king.
 - `src/lib/server/auth.ts`, `pin.ts` — PIN login, hashed sessions, in-memory lockout.
 - `src/routes/` — `/` (the week), `/rois` (history), `/login`, `/logout`, `/health`.
+- `src/lib/server/og.ts` + `/partage/[key]` and `/og/[key].png` — the WhatsApp link preview
+  (Satori + resvg). **The only public pages besides `/login`**, listed in `hooks.server.ts`; they
+  show the latest standings and nothing else. `key` changes with each confirmed result so
+  WhatsApp, which caches previews per link, refetches.
 
 ## Conventions
 
