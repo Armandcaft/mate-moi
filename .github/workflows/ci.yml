@@ -29,5 +29,7 @@ jobs:
       - run: docker build -t mate-moi .
       - run: |
           docker run -d --name app -p 3000:3000 -e ORIGIN=http://localhost:3000 mate-moi
-          for i in $(seq 30); do curl -fs localhost:3000/health && exit 0; sleep 1; done
+          for i in $(seq 30); do curl -fs localhost:3000/health && break; sleep 1; done
+          # The preview image needs resvg's native binary inside the image.
+          curl -fs localhost:3000/og/0.png -o og.png && file og.png | grep -q PNG && exit 0
           docker logs app; exit 1
