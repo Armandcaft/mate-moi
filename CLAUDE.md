@@ -23,7 +23,11 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
 - `src/lib/server/auth.ts`, `pin.ts` — PIN login, hashed sessions, a lockout stored on the player
   row (not in memory: Fly.io restarts the idle machine). CLI codes are temporary (`must_change_pin`);
   the hook sends such a player to `/code` until they choose their own.
-- `src/routes/` — `/` (the week), `/rois` (history), `/code`, `/login`, `/logout`, `/health`.
+- `src/routes/` — `/` (the week), `/rois` (history), `/profil` (name, slogan), `/code`, `/login`,
+  `/logout`, `/health`. Name and slogan rules: `src/lib/profile.ts` (pure, tested).
+- ⚠️ **Page data reaches the browser.** A query feeding a page selects `publicColumns`
+  (`PublicPlayer` in `league.ts`), never a whole player row: it holds the code hash. `/rois`
+  shipped every hash to every player until this rule existed.
 - `src/lib/server/admin.ts` + `/admin` — invites, temporary codes, (de)activation, promotion, the
   backup download. **Every admin load AND action checks `isAdmin` itself** (actions do not run the
   load) and answers 404. `/invitation/[token]` is public: the one-time token is the authorization.

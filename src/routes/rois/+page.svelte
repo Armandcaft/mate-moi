@@ -5,6 +5,7 @@
 	let { data }: PageProps = $props();
 
 	const names = $derived(new Map(data.players.map((p) => [p.id, p.name])));
+	const slogans = $derived(new Map(data.players.map((p) => [p.id, p.slogan])));
 	const name = (id: number) => names.get(id) ?? '?';
 	const podium = $derived(
 		[...data.crowns.entries()].sort((a, b) => b[1] - a[1]).map(([id, n]) => ({ id, n }))
@@ -26,6 +27,9 @@
 			<div class="card px-3 py-4 text-center {i === 0 ? 'border-gold/50' : ''}">
 				<Crown size={i === 0 ? 30 : 22} class="mx-auto mb-2 {i === 0 ? '' : 'opacity-60 grayscale'}" />
 				<p class="truncate font-medium {i === 0 ? 'text-gold' : 'text-silver'}">{name(p.id)}</p>
+				{#if slogans.get(p.id)}
+					<p class="mt-0.5 line-clamp-2 text-[11px] leading-snug text-muted italic">« {slogans.get(p.id)} »</p>
+				{/if}
 				<p class="text-xs text-muted">{p.n} couronne{p.n > 1 ? 's' : ''}</p>
 			</div>
 		{/each}

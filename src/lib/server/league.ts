@@ -18,6 +18,18 @@ export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export class LeagueError extends Error {}
 
+/**
+ * What other players may see about someone. Pages send their data to the browser, so a query
+ * feeding one selects these columns, never the whole row (which holds the code hash).
+ */
+export type PublicPlayer = Pick<Player, 'id' | 'name' | 'active' | 'slogan'>;
+const publicColumns = {
+	id: players.id,
+	name: players.name,
+	active: players.active,
+	slogan: players.slogan
+};
+
 /** A row as the engine sees it: only a confirmed result counts. */
 const toGame = (g: GameRow): Game => ({
 	stage: g.stage,
@@ -37,8 +49,8 @@ const weekPlayerIds = (rows: GameRow[]) => [
 
 // ── Reads ───────────────────────────────────────────────────────────────────────
 
-export function activePlayers(): Player[] {
-	return db.select().from(players).where(eq(players.active, true)).orderBy(asc(players.name)).all();
+export function activePlayers(): PublicPlayer[] {
+	return db.select(publicColumns).from(players).where(eq(players.active, true)).orderBy(asc(players.name)).all();
 }
 
 export function latestWeek(): Week | undefined {
@@ -47,7 +59,7 @@ export function latestWeek(): Week | undefined {
 
 export interface WeekView {
 	week: Week;
-	players: Map<number, Pick<Player, 'id' | 'name'>>;
+	players: Map<number, PublicPlayer>;
 	/** Group-stage table, best first, with a shared rank for players nothing separates. */
 	standings: (Line & { rank: number })[];
 	games: GameRow[];
@@ -71,7 +83,7 @@ export function weekView(week: Week): WeekView {
 	}
 
 	const named = ids.length
-		? db.select({ id: players.id, name: players.name }).from(players).where(inArray(players.id, ids)).all()
+		? db.select(publicColumns).from(players).where(inArray(players.id, ids)).all()
 		: [];
 
 	return {
@@ -91,11 +103,11 @@ export interface Hall {
 	allTime: Line[];
 	/** `h2h.get(a)?.get(b)` = a's record against b, all stages. */
 	h2h: Map<number, Map<number, { w: number; d: number; l: number }>>;
-	players: Player[];
+	players: PublicPlayer[];
 }
 
 export function hall(): Hall {
-	const everyone = db.select().from(players).orderBy(asc(players.name)).all();
+	const everyone = db.select(publicColumns).from(players).orderBy(asc(players.name)).all();
 	const reigns = db
 		.select({ number: weeks.number, kingId: weeks.kingId, closedAt: weeks.closedAt })
 		.from(weeks)

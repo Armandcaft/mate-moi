@@ -23,6 +23,8 @@ export const players = sqliteTable('players', {
 	lockedUntil: integer('locked_until', { mode: 'timestamp' }),
 	/** Admins invite players, reset codes, and download backups (`/admin`). */
 	isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+	/** A short motto the player writes (≤ 60 characters), shown when they are crowned. */
+	slogan: text('slogan'),
 	createdAt: createdAt()
 });
 

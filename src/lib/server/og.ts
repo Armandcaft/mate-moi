@@ -41,7 +41,7 @@ const CROWN = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 
 type Node = { type: string; props: Record<string, unknown> };
-type Child = Node | string | null | false;
+type Child = Node | string | null | undefined | false;
 
 /** A tiny hyperscript: satori takes React-shaped objects, no JSX needed. */
 function h(type: string, style: Record<string, unknown>, ...children: Child[]): Node {
@@ -120,7 +120,9 @@ function card(view: WeekView | null): Node {
 					'div',
 					{ flexDirection: 'column', alignItems: 'center', margin: '18px 0 22px' },
 					h('div', { fontSize: 24, color: C.gold, letterSpacing: 8 }, `ROI DE LA SEMAINE ${view.week.number}`),
-					h('div', { fontFamily: 'Cinzel', fontSize: 88, color: C.goldHi, lineHeight: 1.1 }, name(king))
+					h('div', { fontFamily: 'Cinzel', fontSize: 88, color: C.goldHi, lineHeight: 1.1 }, name(king)),
+					view.players.get(king)?.slogan &&
+						h('div', { fontSize: 26, color: C.silver, marginTop: 6, fontStyle: 'italic' }, `« ${view.players.get(king)?.slogan} »`)
 				)
 			: step.phase === 'final'
 				? h(

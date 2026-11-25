@@ -28,7 +28,7 @@
 			</a>
 			{#if data.me}
 				<div class="flex items-center gap-1 text-xs text-muted">
-					<a href="/code" class="hover:text-silver" title="Changer mon code">{data.me.name}</a>
+					<a href="/profil" class="hover:text-silver" title="Mon profil">{data.me.name}</a>
 					<span aria-hidden="true">·</span>
 					<form method="POST" action="/logout">
 						<button class="hover:text-silver" title="Se déconnecter">sortir</button>

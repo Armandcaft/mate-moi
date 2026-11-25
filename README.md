@@ -52,6 +52,12 @@ Un joueur désactivé garde son historique mais n'entre plus dans les nouvelles 
 - 5 codes faux de suite bloquent le joueur 15 minutes. Le compteur est en base : redémarrer le
   serveur ne le remet pas à zéro.
 
+## Mon profil
+
+Toucher son nom en haut à droite ouvre **Mon profil** : changer son nom (il change partout, même
+dans l'historique), sa **devise** (60 caractères, affichée quand on est couronné, sur l'aperçu
+WhatsApp, à la connexion et chez les Rois) et son code.
+
 ## Admins et invitations
 
 - Le premier admin se nomme en ligne de commande, une fois :

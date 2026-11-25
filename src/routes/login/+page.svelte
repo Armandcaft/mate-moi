@@ -39,7 +39,10 @@
 					<label
 						class="card flex cursor-pointer items-center justify-between px-4 py-3.5 transition-colors has-[:checked]:border-gold has-[:checked]:bg-raised"
 					>
-						<span class="font-medium">{p.name}</span>
+						<span class="min-w-0">
+							<span class="block font-medium">{p.name}</span>
+							{#if p.slogan}<span class="block truncate text-xs text-muted italic">« {p.slogan} »</span>{/if}
+						</span>
 						<input type="radio" name="player" value={p.id} bind:group={selected} class="accent-[#C9A24A]" required />
 					</label>
 				{/each}

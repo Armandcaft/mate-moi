@@ -113,6 +113,9 @@
 			<div class="crown-drop relative"><Crown size={56} class="mx-auto mb-3" /></div>
 			<p class="relative text-xs tracking-[0.25em] text-gold uppercase">Roi de la Semaine {view.week.number}</p>
 			<p class="font-display text-gold-gradient relative mt-1 text-4xl font-bold">{name(step.king)}</p>
+			{#if view.players.get(step.king)?.slogan}
+				<p class="relative mt-2 text-sm text-silver/90 italic">« {view.players.get(step.king)?.slogan} »</p>
+			{/if}
 		</section>
 	{:else if step?.phase === 'playoff'}
 		<section class="card mb-5 border-gold/30 px-4 py-3 text-sm">

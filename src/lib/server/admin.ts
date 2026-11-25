@@ -1,5 +1,5 @@
 // Invites, the admin's player management, and backups.
-import { and, asc, desc, eq, gt, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, isNull, ne } from 'drizzle-orm';
 import { randomBytes, randomInt } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -8,6 +8,7 @@ import { sha256 } from './auth.ts';
 import { db, invites, players, sessions, sqlite, type Player } from './db/index.ts';
 import { joinCurrentWeek } from './league.ts';
 import { hashPin, newPinProblem } from './pin.ts';
+import { ProfileError, checkedName } from './profile.ts';
 
 export class AdminError extends Error {}
 
@@ -47,8 +48,6 @@ export function inviteIsValid(token: string): boolean {
 		.get();
 }
 
-export const NAME_PATTERN = /^[\p{L}][\p{L}\p{M}' .-]{1,23}$/u;
-
 /**
  * The newcomer creates their player with their own code; the invite is spent. If this week's
  * group stage is still running they join it at once (`joined`), otherwise from the next week.
@@ -58,8 +57,6 @@ export function acceptInvite(
 	rawName: string,
 	pin: string
 ): { id: number; week: 'joined' | 'next-week' } {
-	const name = rawName.trim().replace(/\s+/g, ' ');
-	if (!NAME_PATTERN.test(name)) throw new AdminError('Ton nom : 2 à 24 lettres.');
 	const problem = newPinProblem(pin);
 	if (problem) throw new AdminError(problem);
 
@@ -71,12 +68,13 @@ export function acceptInvite(
 			.get();
 		if (!invite) throw new AdminError('Cette invitation a expiré ou a déjà servi.');
 
-		const taken = tx
-			.select({ id: players.id })
-			.from(players)
-			.where(sql`lower(${players.name}) = lower(${name})`)
-			.get();
-		if (taken) throw new AdminError('Ce nom est déjà pris. Ajoute une initiale ?');
+		let name: string;
+		try {
+			name = checkedName(tx, rawName);
+		} catch (e) {
+			if (e instanceof ProfileError) throw new AdminError(e.message);
+			throw e;
+		}
 
 		// Their own code from the start: nothing temporary to replace.
 		const player = tx
