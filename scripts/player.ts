@@ -10,9 +10,16 @@
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { PIN_PATTERN, hashPin } from '../src/lib/server/pin.ts';
+
+// On the server (/data is the Fly.io volume), a PIN hashed without the pepper would never
+// match at login, so refuse rather than create players nobody can sign in as.
+if (existsSync('/data') && !process.env.PIN_PEPPER) {
+	console.error('PIN_PEPPER is not set. Run: fly secrets set PIN_PEPPER=$(openssl rand -hex 32)');
+	process.exit(1);
+}
 
 const path = process.env.DATABASE_PATH ?? 'data/mate-moi.db';
 mkdirSync(dirname(path), { recursive: true });
