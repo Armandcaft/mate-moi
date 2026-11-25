@@ -1,5 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
-import { and, eq, gt } from 'drizzle-orm';
+import { and, eq, gt, ne } from 'drizzle-orm';
 import { createHash, randomBytes } from 'node:crypto';
 import { db, players, sessions, type Player } from './db';
 
@@ -39,28 +39,50 @@ export function destroySession(cookies: Cookies) {
 }
 
 // ── Login throttling ────────────────────────────────────────────────────────────
-// In memory on purpose: one server, and a restart forgiving a few failed PINs is harmless.
+// Kept on the player row: Fly.io stops the machine when idle, which would wipe an
+// in-memory counter and hand a guesser five fresh tries after every restart.
 
 const MAX_FAILURES = 5;
 const LOCK_MS = 15 * 60_000;
-const failures = new Map<number, { count: number; lockedUntil: number }>();
 
-/** Milliseconds until `playerId` may try again, or 0. */
-export function lockedFor(playerId: number): number {
-	const f = failures.get(playerId);
-	return f ? Math.max(0, f.lockedUntil - Date.now()) : 0;
+/** Milliseconds until `player` may try a code again, or 0. */
+export function lockedFor(player: Pick<Player, 'lockedUntil'>): number {
+	return player.lockedUntil ? Math.max(0, player.lockedUntil.getTime() - Date.now()) : 0;
 }
 
-export function recordFailure(playerId: number) {
-	const f = failures.get(playerId) ?? { count: 0, lockedUntil: 0 };
-	f.count++;
-	if (f.count >= MAX_FAILURES) {
-		f.count = 0;
-		f.lockedUntil = Date.now() + LOCK_MS;
-	}
-	failures.set(playerId, f);
+/** Count a wrong code; the fifth in a row locks the player out. Returns the lock in ms, or 0. */
+export function recordFailure(playerId: number): number {
+	return db.transaction((tx) => {
+		const p = tx.select({ n: players.failedLogins }).from(players).where(eq(players.id, playerId)).get();
+		const n = (p?.n ?? 0) + 1;
+		const lock = n >= MAX_FAILURES;
+		tx.update(players)
+			.set(lock ? { failedLogins: 0, lockedUntil: new Date(Date.now() + LOCK_MS) } : { failedLogins: n })
+			.where(eq(players.id, playerId))
+			.run();
+		return lock ? LOCK_MS : 0;
+	});
 }
 
 export function clearFailures(playerId: number) {
-	failures.delete(playerId);
+	db.update(players).set({ failedLogins: 0, lockedUntil: null }).where(eq(players.id, playerId)).run();
+}
+
+export const lockMessage = (ms: number) => `Trop d’essais. Réessaie dans ${Math.ceil(ms / 60_000)} min.`;
+
+// ── Changing one's own code ─────────────────────────────────────────────────────
+
+/** Store a new code, and sign the player out everywhere except this browser. */
+export function setOwnPin(cookies: Cookies, playerId: number, pinHash: string) {
+	const token = cookies.get(SESSION_COOKIE);
+	const keep = token ? sha256(token) : '';
+	db.transaction((tx) => {
+		tx.update(players)
+			.set({ pinHash, mustChangePin: false, failedLogins: 0, lockedUntil: null })
+			.where(eq(players.id, playerId))
+			.run();
+		tx.delete(sessions)
+			.where(and(eq(sessions.playerId, playerId), ne(sessions.id, keep)))
+			.run();
+	});
 }

@@ -26,14 +26,16 @@
 				</span>
 			</a>
 			{#if data.me}
-				<form method="POST" action="/logout">
-					<button class="text-xs text-muted hover:text-silver" title="Se déconnecter">
-						{data.me.name} · sortir
-					</button>
-				</form>
+				<div class="flex items-center gap-1 text-xs text-muted">
+					<a href="/code" class="hover:text-silver" title="Changer mon code">{data.me.name}</a>
+					<span aria-hidden="true">·</span>
+					<form method="POST" action="/logout">
+						<button class="hover:text-silver" title="Se déconnecter">sortir</button>
+					</form>
+				</div>
 			{/if}
 		</div>
-		{#if data.me}
+		{#if data.me && !data.me.mustChangePin}
 			<nav class="mt-4 flex gap-1 rounded-xl bg-board/60 p-1 text-sm">
 				{#each nav as item (item.href)}
 					<a

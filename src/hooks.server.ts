@@ -14,5 +14,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isPublic = PUBLIC.includes(path) || PUBLIC_PREFIXES.some((p) => path.startsWith(p));
 	if (!event.locals.player && !isPublic) redirect(303, '/login');
 
+	// A temporary code must be replaced before anything else.
+	if (event.locals.player?.mustChangePin && !isPublic && path !== '/code' && path !== '/logout')
+		redirect(303, '/code');
+
 	return resolve(event);
 };

@@ -27,7 +27,7 @@ départage se fait là, `RULES` dans `types.ts`.
 
 ```sh
 npm install
-npm run player -- add Frank 1234   # les joueurs et leurs codes ne sont jamais dans le dépôt
+npm run player -- add Frank 482915 # les joueurs et leurs codes ne sont jamais dans le dépôt
 npm run dev                        # http://localhost:5173
 npm test                           # le moteur du tournoi
 npm run check                      # types
@@ -40,6 +40,16 @@ les migrations s'appliquent au démarrage.
 Joueurs : `npm run player -- add|pin <nom> <code>`, `activate|deactivate <nom>`, `list`.
 Un joueur désactivé garde son historique mais n'entre plus dans les nouvelles semaines.
 
+## Les codes
+
+- Le code donné avec `add` ou `pin` est **provisoire** : à la connexion suivante, le joueur doit
+  choisir le sien (6 à 8 chiffres, pas de suite ni de chiffre répété). Personne d'autre ne le connaît.
+- Chacun peut le changer quand il veut en touchant son nom en haut à droite ; ses autres appareils
+  sont alors déconnectés.
+- **Code oublié** : `player pin <nom> <code provisoire>`. Cela lève aussi un éventuel blocage.
+- 5 codes faux de suite bloquent le joueur 15 minutes. Le compteur est en base : redémarrer le
+  serveur ne le remet pas à zéro.
+
 ## Déployer (Fly.io)
 
 ```sh
@@ -47,7 +57,7 @@ fly launch --no-deploy --copy-config        # garde fly.toml ; change "app" si l
 fly volumes create mate_moi_data --size 1 --region cdg
 fly secrets set PIN_PEPPER=$(openssl rand -hex 32)
 fly deploy
-fly ssh console -C "node scripts/player.ts add Frank 1234"
+fly ssh console -C "sh -c 'cd /app && node scripts/player.ts add Frank 482915'"
 ```
 
 Si le nom de l'app change, mets aussi à jour `ORIGIN` dans `fly.toml`.

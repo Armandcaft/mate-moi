@@ -13,6 +13,14 @@ export const players = sqliteTable('players', {
 	pinHash: text('pin_hash').notNull(),
 	/** Inactive players keep their history but are left out of new weeks. */
 	active: integer('active', { mode: 'boolean' }).notNull().default(true),
+	/**
+	 * A code set from the CLI is temporary: the player must choose their own before
+	 * anything else. Defaults to true so existing players are asked once after this lands.
+	 */
+	mustChangePin: integer('must_change_pin', { mode: 'boolean' }).notNull().default(true),
+	/** Wrong codes in a row; reset on success. Stored so a restart does not forgive them. */
+	failedLogins: integer('failed_logins').notNull().default(0),
+	lockedUntil: integer('locked_until', { mode: 'timestamp' }),
 	createdAt: createdAt()
 });
 

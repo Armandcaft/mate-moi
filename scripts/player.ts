@@ -1,12 +1,14 @@
 // Manage players from the command line — names and PINs never live in the repository.
 //
-//   npm run player -- add Frank 1234
-//   npm run player -- pin Frank 5678
+// The codes set here are TEMPORARY: the player must choose their own at the next login.
+//
+//   npm run player -- add Frank 482915
+//   npm run player -- pin Frank 739104   (forgotten code: also lifts a lockout)
 //   npm run player -- list
 //   npm run player -- deactivate Frank   (keeps their history, leaves them out of new weeks)
 //   npm run player -- activate Frank
 //
-// In production: fly ssh console -C "node scripts/player.ts add Frank 1234"
+// In production: fly ssh console -C "sh -c 'cd /app && node scripts/player.ts add Frank 482915'"
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
@@ -35,7 +37,7 @@ function fail(message: string): never {
 }
 
 function requirePin(p: string | undefined): string {
-	if (!p || !PIN_PATTERN.test(p)) fail('The PIN must be 4 to 8 digits.');
+	if (!p || !PIN_PATTERN.test(p)) fail('The PIN must be 6 to 8 digits.');
 	return p;
 }
 
@@ -54,19 +56,28 @@ switch (command) {
 		const n = requireName(name);
 		const p = requirePin(pin);
 		try {
-			sqlite.prepare('INSERT INTO players (name, pin_hash) VALUES (?, ?)').run(n, hashPin(p));
+			sqlite
+				.prepare('INSERT INTO players (name, pin_hash, must_change_pin) VALUES (?, ?, 1)')
+				.run(n, hashPin(p));
 		} catch {
 			fail(`"${n}" already exists.`);
 		}
-		console.log(`Added ${n}.`);
+		console.log(`Added ${n}. The code is temporary: they choose their own at first login.`);
 		break;
 	}
 	case 'pin': {
 		const n = requireName(name);
-		changed(sqlite.prepare('UPDATE players SET pin_hash = ? WHERE name = ?').run(hashPin(requirePin(pin)), n), n);
+		changed(
+			sqlite
+				.prepare(
+					'UPDATE players SET pin_hash = ?, must_change_pin = 1, failed_logins = 0, locked_until = NULL WHERE name = ?'
+				)
+				.run(hashPin(requirePin(pin)), n),
+			n
+		);
 		// A new PIN signs the player out everywhere.
 		sqlite.prepare('DELETE FROM sessions WHERE player_id = (SELECT id FROM players WHERE name = ?)').run(n);
-		console.log(`New PIN set for ${n}.`);
+		console.log(`Temporary PIN set for ${n}; they choose their own at next login.`);
 		break;
 	}
 	case 'activate':

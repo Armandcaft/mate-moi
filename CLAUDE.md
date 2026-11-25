@@ -20,7 +20,9 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   here, with a test.
 - `src/lib/server/league.ts` — the only code that writes games/weeks. Every write is a transaction;
   `confirmResult` calls `advance`, which inserts whatever `nextStep` asks for or crowns the king.
-- `src/lib/server/auth.ts`, `pin.ts` — PIN login, hashed sessions, in-memory lockout.
+- `src/lib/server/auth.ts`, `pin.ts` — PIN login, hashed sessions, a lockout stored on the player
+  row (not in memory: Fly.io restarts the idle machine). CLI codes are temporary (`must_change_pin`);
+  the hook sends such a player to `/code` until they choose their own.
 - `src/routes/` — `/` (the week), `/rois` (history), `/login`, `/logout`, `/health`.
 - `src/lib/server/og.ts` + `/partage/[key]` and `/og/[key].png` — the WhatsApp link preview
   (Satori + resvg). **The only public pages besides `/login`**, listed in `hooks.server.ts`; they

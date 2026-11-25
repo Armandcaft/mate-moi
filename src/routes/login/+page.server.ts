@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { clearFailures, createSession, lockedFor, recordFailure } from '#lib/server/auth.ts';
+import { clearFailures, createSession, lockMessage, lockedFor, recordFailure } from '#lib/server/auth.ts';
 import { db, players } from '#lib/server/db/index.ts';
 import { activePlayers } from '#lib/server/league.ts';
 import { verifyPin } from '#lib/server/pin.ts';
@@ -20,20 +20,18 @@ export const actions: Actions = {
 		const player = db.select().from(players).where(eq(players.id, playerId)).get();
 		if (!player || !player.active) return fail(400, { playerId, message: 'Choisis ton nom.' });
 
-		const wait = lockedFor(player.id);
-		if (wait > 0)
-			return fail(429, {
-				playerId,
-				message: `Trop d’essais. Réessaie dans ${Math.ceil(wait / 60_000)} min.`
-			});
+		const wait = lockedFor(player);
+		if (wait > 0) return fail(429, { playerId, message: lockMessage(wait) });
 
 		if (!verifyPin(pin, player.pinHash)) {
-			recordFailure(player.id);
+			const locked = recordFailure(player.id);
+			if (locked) return fail(429, { playerId, message: lockMessage(locked) });
 			return fail(400, { playerId, message: 'Code incorrect.' });
 		}
 
 		clearFailures(player.id);
 		createSession(cookies, player.id, url.protocol === 'https:');
-		redirect(303, '/');
+		// A temporary code from the admin: the hook sends them to choose their own.
+		redirect(303, player.mustChangePin ? '/code' : '/');
 	}
 };
