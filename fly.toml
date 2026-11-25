@@ -1,27 +1,31 @@
-# fly launch --no-deploy reads this; see README "Deploy".
-app = "mate-moi"
-primary_region = "cdg"
+# fly.toml app configuration file generated for mate-moi on 2026-11-25T03:18:07Z
+#
+# See https://docs.fly.io/reference/configuration for information about how to use this file.
+#
 
+app = 'mate-moi'
+primary_region = 'cdg'
+
+[build]
 [env]
-  ORIGIN = "https://mate-moi.fly.dev"
+  ORIGIN = 'https://mate-moi.fly.dev'
 
 [[mounts]]
-  source = "mate_moi_data"
-  destination = "/data"
+  source = 'mate_moi_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 3000
   force_https = true
-  # Sleeps when nobody is looking; wakes in a second or two on the next visit.
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
   [[http_service.checks]]
-    path = "/health"
-    interval = "30s"
-    timeout = "5s"
+    interval = '30s'
+    timeout = '5s'
+    path = '/health'
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
+  size = 'shared-cpu-1x'
+  memory = '256mb'
