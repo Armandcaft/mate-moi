@@ -15,6 +15,13 @@
       "when": 1795585726724,
       "tag": "0001_self_service_pin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795609582281,
+      "tag": "0002_invites_and_admins",
+      "breakpoints": true
     }
   ]
 }

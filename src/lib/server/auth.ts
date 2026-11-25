@@ -6,7 +6,7 @@ import { db, players, sessions, type Player } from './db';
 export const SESSION_COOKIE = 'mm_session';
 const SESSION_DAYS = 180;
 
-const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+export const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
 export function createSession(cookies: Cookies, playerId: number, secure: boolean) {
 	const token = randomBytes(32).toString('base64url');
@@ -27,7 +27,14 @@ export function playerFromSession(token: string | undefined): Player | null {
 		.select({ player: players })
 		.from(sessions)
 		.innerJoin(players, eq(players.id, sessions.playerId))
-		.where(and(eq(sessions.id, sha256(token)), gt(sessions.expiresAt, new Date())))
+		.where(
+			and(
+				eq(sessions.id, sha256(token)),
+				gt(sessions.expiresAt, new Date()),
+				// A deactivated player is signed out everywhere at once.
+				eq(players.active, true)
+			)
+		)
 		.get();
 	return row?.player ?? null;
 }

@@ -9,7 +9,8 @@ import * as schema from './schema';
 const path = process.env.DATABASE_PATH ?? 'data/mate-moi.db';
 mkdirSync(dirname(path), { recursive: true });
 
-const sqlite = new Database(path);
+/** The raw handle, for what Drizzle does not wrap: the online backup in `admin.ts`. */
+export const sqlite = new Database(path);
 sqlite.pragma('journal_mode = WAL'); // also what Litestream needs
 sqlite.pragma('foreign_keys = ON');
 sqlite.pragma('busy_timeout = 5000');

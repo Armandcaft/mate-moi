@@ -50,6 +50,44 @@ Un joueur désactivé garde son historique mais n'entre plus dans les nouvelles 
 - 5 codes faux de suite bloquent le joueur 15 minutes. Le compteur est en base : redémarrer le
   serveur ne le remet pas à zéro.
 
+## Admins et invitations
+
+- Le premier admin se nomme en ligne de commande, une fois :
+  `fly ssh console -C "sh -c 'cd /app && node scripts/player.ts promote <nom>'"`.
+- Ensuite tout se fait dans l'onglet **Admin** de l'app :
+  - **Créer un lien d'invitation** : à envoyer sur WhatsApp. Il sert une seule fois et expire au
+    bout de 48 h. Le nouveau joueur choisit lui-même son nom et son code, et entre en jeu à la
+    semaine suivante.
+  - **Nouveau code provisoire** pour un code oublié (le joueur est déconnecté et en choisit un
+    nouveau à la connexion), **Désactiver / Réactiver**, **Nommer / Retirer admin**.
+  - **Télécharger toute la ligue** : la sauvegarde complète, un seul fichier `.db`.
+- Seuls les admins invitent. Un admin ne peut ni se désactiver ni se retirer ses propres droits.
+
+## Sauvegarde et restauration
+
+Toute la ligue tient dans **un seul fichier SQLite**. La sauvegarde (onglet Admin) en est une
+copie cohérente, prise pendant que l'app tourne.
+
+**Restaurer** : déposer le fichier sous le nom `restore.db` à côté de la base, puis redémarrer.
+Au démarrage, l'app le met en place et garde l'ancienne base à côté
+(`mate-moi.db.before-restore-<date>`).
+
+```sh
+# Fly.io
+fly ssh sftp shell          # puis : put mate-moi-2026-11-25.db /data/restore.db
+fly machine restart
+
+# Sur un VPS avec Docker (volume monté sur /data)
+cp mate-moi-2026-11-25.db /chemin/du/volume/restore.db && docker restart mate-moi
+```
+
+**Changer de serveur** (Fly.io → VPS) : télécharger la sauvegarde, la restaurer sur le nouveau
+serveur comme ci-dessus, et **reprendre le même `PIN_PEPPER`** (sinon plus aucun code ne
+fonctionne). Ne le connaissant plus ? Restaurer quand même, puis donner un code provisoire à
+chacun avec `player pin`.
+
+⚠️ La sauvegarde contient les codes (chiffrés) : à garder privée.
+
 ## Déployer (Fly.io)
 
 ```sh
@@ -58,6 +96,7 @@ fly volumes create mate_moi_data --size 1 --region cdg
 fly secrets set PIN_PEPPER=$(openssl rand -hex 32)
 fly deploy
 fly ssh console -C "sh -c 'cd /app && node scripts/player.ts add Frank 482915'"
+fly ssh console -C "sh -c 'cd /app && node scripts/player.ts promote Frank'"
 ```
 
 Si le nom de l'app change, mets aussi à jour `ORIGIN` dans `fly.toml`.

@@ -43,9 +43,18 @@
 	});
 
 	let starting = $state(false);
+	/** Invited mid-week: not in this week's schedule, playing from the next one. */
+	const benched = $derived(!!view && !view.week.closedAt && !view.players.has(me.id));
 </script>
 
 <svelte:head><title>Semaine {view?.week.number ?? ''} · Mate-Moi</title></svelte:head>
+
+{#if benched}
+	<p class="card mb-4 border-gold/40 px-4 py-3 text-sm text-silver" role="status">
+		<span class="text-gold">Bienvenue, {me.name}.</span> Cette semaine est déjà lancée : tu entres en jeu à
+		la prochaine. En attendant, suis le classement.
+	</p>
+{/if}
 
 {#if form?.message}
 	<p class="card mb-4 border-loss/60 px-4 py-3 text-sm text-[#d27b7b]" role="alert">{form.message}</p>

@@ -21,6 +21,21 @@ export const players = sqliteTable('players', {
 	/** Wrong codes in a row; reset on success. Stored so a restart does not forgive them. */
 	failedLogins: integer('failed_logins').notNull().default(0),
 	lockedUntil: integer('locked_until', { mode: 'timestamp' }),
+	/** Admins invite players, reset codes, and download backups (`/admin`). */
+	isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+	createdAt: createdAt()
+});
+
+/** A one-time link that lets a newcomer create their own player. */
+export const invites = sqliteTable('invites', {
+	/** SHA-256 of the link's token; the token itself is shown once and never stored. */
+	id: text('id').primaryKey(),
+	createdById: integer('created_by_id')
+		.notNull()
+		.references(() => players.id),
+	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+	usedAt: integer('used_at', { mode: 'timestamp' }),
+	usedById: integer('used_by_id').references(() => players.id),
 	createdAt: createdAt()
 });
 
@@ -68,5 +83,6 @@ export const games = sqliteTable(
 );
 
 export type Player = typeof players.$inferSelect;
+export type Invite = typeof invites.$inferSelect;
 export type Week = typeof weeks.$inferSelect;
 export type GameRow = typeof games.$inferSelect;

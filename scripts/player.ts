@@ -7,6 +7,8 @@
 //   npm run player -- list
 //   npm run player -- deactivate Frank   (keeps their history, leaves them out of new weeks)
 //   npm run player -- activate Frank
+//   npm run player -- promote Frank      (admin: invites, codes, backups at /admin)
+//   npm run player -- demote Frank
 //
 // In production: fly ssh console -C "sh -c 'cd /app && node scripts/player.ts add Frank 482915'"
 import Database from 'better-sqlite3';
@@ -87,16 +89,25 @@ switch (command) {
 		console.log(`${n} ${command}d.`);
 		break;
 	}
+	case 'promote':
+	case 'demote': {
+		const n = requireName(name);
+		changed(sqlite.prepare('UPDATE players SET is_admin = ? WHERE name = ?').run(command === 'promote' ? 1 : 0, n), n);
+		console.log(`${n} is ${command === 'promote' ? 'now an admin' : 'no longer an admin'}.`);
+		break;
+	}
 	case 'list': {
-		const rows = sqlite.prepare('SELECT id, name, active FROM players ORDER BY name').all() as {
+		const rows = sqlite.prepare('SELECT id, name, active, is_admin FROM players ORDER BY name').all() as {
 			id: number;
 			name: string;
 			active: number;
+			is_admin: number;
 		}[];
-		for (const r of rows) console.log(`${r.id}\t${r.name}${r.active ? '' : '\t(inactive)'}`);
+		for (const r of rows)
+			console.log(`${r.id}\t${r.name}${r.is_admin ? '\t(admin)' : ''}${r.active ? '' : '\t(inactive)'}`);
 		if (!rows.length) console.log('No players yet.');
 		break;
 	}
 	default:
-		fail('Usage: player add|pin <name> <pin> · player activate|deactivate <name> · player list');
+		fail('Usage: player add|pin <name> <pin> · player activate|deactivate|promote|demote <name> · player list');
 }

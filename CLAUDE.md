@@ -23,9 +23,13 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
 - `src/lib/server/auth.ts`, `pin.ts` — PIN login, hashed sessions, a lockout stored on the player
   row (not in memory: Fly.io restarts the idle machine). CLI codes are temporary (`must_change_pin`);
   the hook sends such a player to `/code` until they choose their own.
-- `src/routes/` — `/` (the week), `/rois` (history), `/login`, `/logout`, `/health`.
+- `src/routes/` — `/` (the week), `/rois` (history), `/code`, `/login`, `/logout`, `/health`.
+- `src/lib/server/admin.ts` + `/admin` — invites, temporary codes, (de)activation, promotion, the
+  backup download. **Every admin load AND action checks `isAdmin` itself** (actions do not run the
+  load) and answers 404. `/invitation/[token]` is public: the one-time token is the authorization.
+- Restore = `restore.db` next to the database, swapped in by `docker-entrypoint.sh` at start-up.
 - `src/lib/server/og.ts` + `/partage/[key]` and `/og/[key].png` — the WhatsApp link preview
-  (Satori + resvg). **The only public pages besides `/login`**, listed in `hooks.server.ts`; they
+  (Satori + resvg). **Public, with `/login` and `/invitation/`**, listed in `hooks.server.ts`; they
   show the latest standings and nothing else. `key` changes with each confirmed result so
   WhatsApp, which caches previews per link, refetches.
 

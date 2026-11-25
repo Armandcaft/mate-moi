@@ -3,8 +3,11 @@ import type { Handle } from '@sveltejs/kit/hooks';
 import { SESSION_COOKIE, playerFromSession } from '#lib/server/auth.ts';
 
 const PUBLIC = ['/login', '/health'];
-/** Link previews: WhatsApp fetches these without a session. They show only the standings. */
-const PUBLIC_PREFIXES = ['/og/', '/partage/'];
+/**
+ * Link previews (WhatsApp fetches these without a session; they show only the standings) and
+ * invitations (the newcomer has no account yet; the token is the authorization).
+ */
+const PUBLIC_PREFIXES = ['/og/', '/partage/', '/invitation/'];
 
 /** Private league: every page but these needs a signed-in player. */
 export const handle: Handle = async ({ event, resolve }) => {

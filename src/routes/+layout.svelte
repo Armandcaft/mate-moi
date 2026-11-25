@@ -6,10 +6,11 @@
 
 	let { children, data }: LayoutProps = $props();
 
-	const nav = [
+	const nav = $derived([
 		{ href: '/', label: 'La semaine' },
-		{ href: '/rois', label: 'Les Rois' }
-	];
+		{ href: '/rois', label: 'Les Rois' },
+		...(data.me?.isAdmin ? [{ href: '/admin', label: 'Admin' }] : [])
+	]);
 </script>
 
 <svelte:head>
