@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupSchedule, nextStep, rank, table, type Game, type NewGame, type Result } from './index';
+import { groupSchedule, joinerSchedule, nextStep, pairs, rank, table, type Game, type NewGame, type Result } from './index';
 
 const A = 1, B = 2, C = 3;
 const PLAYERS = [A, B, C];
@@ -173,5 +173,41 @@ describe('nextStep', () => {
 
 		const decider = { ...step.create[0], result: '0-1' as const }; // a "draw" reported as Black's win
 		expect(nextStep(PLAYERS, [...games, drawn, decider])).toMatchObject({ phase: 'done', king: A });
+	});
+});
+
+describe('joinerSchedule', () => {
+	const D = 4;
+
+	it('gives the newcomer 3 games against each player already in the week', () => {
+		const games = joinerSchedule(PLAYERS, D, 3, 1);
+		expect(games).toHaveLength(9);
+		expect(games.every((g) => g.whiteId === D || g.blackId === D)).toBe(true);
+		for (const p of PLAYERS)
+			expect(games.filter((g) => g.whiteId === p || g.blackId === p)).toHaveLength(3);
+	});
+
+	it('alternates colours within each new pairing', () => {
+		const vsA = joinerSchedule(PLAYERS, D, 3, 1).filter((g) => g.whiteId === A || g.blackId === A);
+		expect(vsA[0].whiteId).not.toBe(vsA[1].whiteId);
+		expect(vsA[1].whiteId).not.toBe(vsA[2].whiteId);
+	});
+
+	it('makes the week a full round-robin again: every pair plays 3 games', () => {
+		const week = [...groupSchedule(PLAYERS, 3, 1), ...joinerSchedule(PLAYERS, D, 3, 1)];
+		for (const [a, b] of pairs([A, B, C, D])) {
+			const between = week.filter((g) => [g.whiteId, g.blackId].sort().join() === [a, b].sort().join());
+			expect(between).toHaveLength(3);
+		}
+	});
+
+	it('keeps the week in the group stage until the newcomer’s games are played too', () => {
+		const played = group((a) => [a, a, a]); // the original 9, all finished
+		const joined: Game[] = joinerSchedule(PLAYERS, D, 3, 1).map((g) => ({ ...g, result: null }));
+		expect(nextStep([A, B, C, D], [...played, ...joined])).toEqual({ phase: 'group', create: [] });
+
+		const done = joined.map((g) => ({ ...g, result: beats(g, D) }));
+		const step = nextStep([A, B, C, D], [...played, ...done]);
+		expect(step).toMatchObject({ phase: 'final', finalists: [D, A] }); // D 27 points, A 18
 	});
 });

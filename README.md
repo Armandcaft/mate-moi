@@ -56,12 +56,19 @@ Un joueur désactivé garde son historique mais n'entre plus dans les nouvelles 
   `fly ssh console -C "sh -c 'cd /app && node scripts/player.ts promote <nom>'"`.
 - Ensuite tout se fait dans l'onglet **Admin** de l'app :
   - **Créer un lien d'invitation** : à envoyer sur WhatsApp. Il sert une seule fois et expire au
-    bout de 48 h. Le nouveau joueur choisit lui-même son nom et son code, et entre en jeu à la
-    semaine suivante.
+    bout de 48 h. Le nouveau joueur choisit lui-même son nom et son code.
   - **Nouveau code provisoire** pour un code oublié (le joueur est déconnecté et en choisit un
     nouveau à la connexion), **Désactiver / Réactiver**, **Nommer / Retirer admin**.
   - **Télécharger toute la ligue** : la sauvegarde complète, un seul fichier `.db`.
 - Seuls les admins invitent. Un admin ne peut ni se désactiver ni se retirer ses propres droits.
+
+## Arriver en cours de semaine
+
+- **Pendant la phase de groupes** : le nouveau joueur entre tout de suite. Ses 3 parties contre
+  chacun s'ajoutent à la semaine, qui reste un tournoi complet où tout le monde affronte tout le
+  monde autant de fois : le classement reste juste. La finale attend que ses parties soient jouées.
+- **Pendant le barrage ou la finale** : il commence la semaine suivante.
+- Pas de semaine en cours : il fera partie de la prochaine.
 
 ## Sauvegarde et restauration
 

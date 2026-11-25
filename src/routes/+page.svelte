@@ -43,7 +43,9 @@
 	});
 
 	let starting = $state(false);
-	/** Invited mid-week: not in this week's schedule, playing from the next one. */
+	/** Just joined through an invitation, straight into this week's group stage. */
+	const welcome = $derived(page.url.searchParams.has('bienvenue') && !!view?.players.has(me.id));
+	/** Joined after this week's group stage: playing from the next one. */
 	const benched = $derived(!!view && !view.week.closedAt && !view.players.has(me.id));
 </script>
 
@@ -51,8 +53,13 @@
 
 {#if benched}
 	<p class="card mb-4 border-gold/40 px-4 py-3 text-sm text-silver" role="status">
-		<span class="text-gold">Bienvenue, {me.name}.</span> Cette semaine est déjà lancée : tu entres en jeu à
-		la prochaine. En attendant, suis le classement.
+		<span class="text-gold">Bienvenue, {me.name}.</span> La phase de groupes de cette semaine est
+		terminée : tu entres en jeu à la prochaine. En attendant, suis la finale.
+	</p>
+{:else if welcome}
+	<p class="card mb-4 border-gold/40 px-4 py-3 text-sm text-silver" role="status">
+		<span class="text-gold">Bienvenue, {me.name}.</span> Tu entres dans la semaine en cours : tes
+		{todo.length} parties sont dans « À toi de jouer ».
 	</p>
 {/if}
 

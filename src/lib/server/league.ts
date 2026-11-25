@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import {
 	RULES,
 	groupSchedule,
+	joinerSchedule,
 	nextStep,
 	rank,
 	table,
@@ -12,7 +13,7 @@ import {
 } from '../tournament';
 import { db, games, players, weeks, type GameRow, type Player, type Week } from './db';
 
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export class LeagueError extends Error {}
 
@@ -212,4 +213,24 @@ function advance(tx: Tx, weekId: number) {
 			.run();
 	if (step.phase === 'done')
 		tx.update(weeks).set({ kingId: step.king, closedAt: new Date() }).where(eq(weeks.id, weekId)).run();
+}
+
+/**
+ * A newcomer joins the open week while its group stage is still being played: their games against
+ * everyone are added, keeping it a full round-robin. Once the play-off or final has started there
+ * is nothing fair left to join, so they start with the next week.
+ */
+export function joinCurrentWeek(tx: Tx, playerId: number): 'joined' | 'next-week' {
+	const week = tx.select().from(weeks).where(isNull(weeks.closedAt)).get();
+	if (!week) return 'next-week'; // no week running: the next one includes every active player
+	const rows = weekGames(tx, week.id);
+	const ids = weekPlayerIds(rows);
+	if (ids.includes(playerId)) return 'joined';
+	if (nextStep(ids, rows.map(toGame)).phase !== 'group') return 'next-week';
+
+	const added = joinerSchedule(ids, playerId, RULES.gamesPerPair, week.number);
+	tx.insert(games)
+		.values(added.map((g) => ({ ...g, weekId: week.id })))
+		.run();
+	return 'joined';
 }

@@ -38,3 +38,31 @@ export function groupSchedule(
 	}
 	return games;
 }
+
+/**
+ * A player joining a week whose group stage is under way: their games against everyone already
+ * in it, `gamesPerPair` each, colours alternating as in `groupSchedule`. With these added the
+ * week is again a full round-robin, so the standings stay comparable.
+ */
+export function joinerSchedule(
+	existingIds: PlayerId[],
+	newId: PlayerId,
+	gamesPerPair: number,
+	weekNumber: number
+): NewGame[] {
+	const others = [...existingIds].filter((id) => id !== newId).sort((a, b) => a - b);
+	const games: NewGame[] = [];
+	for (let round = 1; round <= gamesPerPair; round++) {
+		others.forEach((other, i) => {
+			const newcomerWhite = (round + weekNumber + i) % 2 === 0;
+			games.push({
+				stage: 'group',
+				round,
+				whiteId: newcomerWhite ? newId : other,
+				blackId: newcomerWhite ? other : newId,
+				armageddon: false
+			});
+		});
+	}
+	return games;
+}

@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { sha256 } from './auth.ts';
 import { db, invites, players, sessions, sqlite, type Player } from './db/index.ts';
+import { joinCurrentWeek } from './league.ts';
 import { hashPin, newPinProblem } from './pin.ts';
 
 export class AdminError extends Error {}
@@ -48,8 +49,15 @@ export function inviteIsValid(token: string): boolean {
 
 export const NAME_PATTERN = /^[\p{L}][\p{L}\p{M}' .-]{1,23}$/u;
 
-/** The newcomer creates their player with their own code; the invite is spent. Returns their id. */
-export function acceptInvite(token: string, rawName: string, pin: string): number {
+/**
+ * The newcomer creates their player with their own code; the invite is spent. If this week's
+ * group stage is still running they join it at once (`joined`), otherwise from the next week.
+ */
+export function acceptInvite(
+	token: string,
+	rawName: string,
+	pin: string
+): { id: number; week: 'joined' | 'next-week' } {
 	const name = rawName.trim().replace(/\s+/g, ' ');
 	if (!NAME_PATTERN.test(name)) throw new AdminError('Ton nom : 2 à 24 lettres.');
 	const problem = newPinProblem(pin);
@@ -80,7 +88,7 @@ export function acceptInvite(token: string, rawName: string, pin: string): numbe
 			.set({ usedAt: new Date(), usedById: player.id })
 			.where(eq(invites.id, invite.id))
 			.run();
-		return player.id;
+		return { id: player.id, week: joinCurrentWeek(tx, player.id) };
 	});
 }
 

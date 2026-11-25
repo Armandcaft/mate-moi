@@ -18,13 +18,15 @@ export const actions: Actions = {
 		const pin = String(form.get('pin') ?? '');
 		if (pin !== String(form.get('confirm') ?? ''))
 			return fail(400, { name, message: 'Les deux codes ne correspondent pas.' });
+		let week: 'joined' | 'next-week';
 		try {
-			const id = acceptInvite(params.token, name, pin);
-			createSession(cookies, id, url.protocol === 'https:');
+			const joined = acceptInvite(params.token, name, pin);
+			createSession(cookies, joined.id, url.protocol === 'https:');
+			week = joined.week;
 		} catch (e) {
 			if (e instanceof AdminError) return fail(400, { name, message: e.message });
 			throw e;
 		}
-		redirect(303, '/?bienvenue');
+		redirect(303, week === 'joined' ? '/?bienvenue' : '/');
 	}
 };

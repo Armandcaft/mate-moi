@@ -27,6 +27,8 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
 - `src/lib/server/admin.ts` + `/admin` — invites, temporary codes, (de)activation, promotion, the
   backup download. **Every admin load AND action checks `isAdmin` itself** (actions do not run the
   load) and answers 404. `/invitation/[token]` is public: the one-time token is the authorization.
+  A newcomer joins the running week only during its group stage (`joinCurrentWeek`, adding
+  `joinerSchedule`'s games so the week stays a full round-robin); after that, the next week.
 - Restore = `restore.db` next to the database, swapped in by `docker-entrypoint.sh` at start-up.
 - `src/lib/server/og.ts` + `/partage/[key]` and `/og/[key].png` — the WhatsApp link preview
   (Satori + resvg). **Public, with `/login` and `/invitation/`**, listed in `hooks.server.ts`; they

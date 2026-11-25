@@ -49,7 +49,10 @@
 					Envoyer
 				</a>
 			</div>
-			<p class="mt-3 text-xs text-muted">Le nouveau joueur entre à partir de la semaine suivante.</p>
+			<p class="mt-3 text-xs text-muted">
+				Pendant la phase de groupes, il entre dans la semaine en cours : ses parties contre chacun
+				s’ajoutent. Après, il commence la semaine suivante.
+			</p>
 		</div>
 	{:else}
 		<form method="POST" action="?/invite" use:enhance>
