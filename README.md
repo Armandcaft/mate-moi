@@ -50,6 +50,7 @@
 | 📅 **Week deadline** | the group stage closes after 7 days (admins can move it); unplayed games end 0 – 0, lost by both, and the final goes ahead |
 | ⏱️ **Auto-confirm** | a result nobody confirms or disputes for 48 h counts; the card counts the hours down |
 | 🚪 **Leaving mid-week** | an archived or deleted player's group games are dropped, or their play-off and final games forfeited, so the week still crowns a King |
+| 📊 **Stats** | in the Hall of Kings: current and best streaks, win rate, games played, your *bête noire* and your favourite victim |
 | 🛡️ **Admin tab** | invites, temporary codes, archiving, deletion, promotion, one-click backup |
 | 👑 **One owner** | set from the command line; nobody can demote, archive or delete them; they hand the league on from the Admin tab |
 | 🌍 **Three languages** | French (default), English, German; follows the phone, switchable anytime |

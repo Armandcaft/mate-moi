@@ -10,10 +10,12 @@ import {
 	joinerSchedule,
 	nextStep,
 	nothingDue,
+	playerStats,
 	rank,
 	table,
 	type Game,
 	type Line,
+	type PlayerStats,
 	type Result,
 	type Step,
 	type TimedGame
@@ -118,6 +120,8 @@ export interface Hall {
 	/** `h2h.get(a)?.get(b)` = a's record against b, all stages. */
 	h2h: Map<number, Map<number, { w: number; d: number; l: number }>>;
 	players: PublicPlayer[];
+	/** Streaks, win rate, bête noire and tête de Turc of each active player, all stages. */
+	stats: PlayerStats[];
 }
 
 export function hall(): Hall {
@@ -132,7 +136,8 @@ export function hall(): Hall {
 	const crowns = new Map<number, number>();
 	for (const r of reigns) crowns.set(r.kingId, (crowns.get(r.kingId) ?? 0) + 1);
 
-	const confirmed = db.select().from(games).where(isNotNull(games.confirmedAt)).all().map(toGame);
+	const rows = db.select().from(games).where(isNotNull(games.confirmedAt)).all();
+	const confirmed = rows.map(toGame);
 	const ids = everyone.map((p) => p.id);
 	const allTime = table(
 		ids,
@@ -160,7 +165,19 @@ export function hall(): Hall {
 		}
 	}
 
-	return { reigns, crowns, allTime, h2h, players: everyone };
+	const statGames = rows.map((g) => ({
+		id: g.id,
+		whiteId: g.whiteId,
+		blackId: g.blackId,
+		result: g.result!,
+		confirmedAt: g.confirmedAt!.getTime()
+	}));
+	const stats = everyone
+		.filter((p) => p.active && !p.deletedAt)
+		.map((p) => playerStats(p.id, statGames))
+		.filter((s) => s.played > 0);
+
+	return { reigns, crowns, allTime, h2h, players: everyone, stats };
 }
 
 // ── Writes ──────────────────────────────────────────────────────────────────────

@@ -120,7 +120,20 @@ export const fr = {
 		crowns: { one: '{n} couronne', other: '{n} couronnes' },
 		allTime: 'Classement général · phase de groupes',
 		noGames: 'Pas encore de partie confirmée.',
-		headToHead: 'Face à face · V-N-D, toutes phases'
+		headToHead: 'Face à face · V-N-D, toutes phases',
+		stats: 'Statistiques · toutes phases',
+		games: { one: '{n} partie', other: '{n} parties' },
+		winRate: 'Victoires',
+		percent: '{n} %',
+		bestStreak: 'Meilleure série',
+		played: 'Parties',
+		streakWin: { one: '{n} victoire', other: '{n} victoires de suite' },
+		streakLoss: { one: '{n} défaite', other: '{n} défaites de suite' },
+		streakDraw: { one: '{n} nulle', other: '{n} nulles de suite' },
+		streakNow: 'En ce moment',
+		nemesis: 'Bête noire',
+		victim: 'Tête de Turc',
+		nobody: 'personne'
 	},
 	login: {
 		title: 'Connexion',

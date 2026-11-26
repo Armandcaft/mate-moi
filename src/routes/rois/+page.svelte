@@ -13,6 +13,11 @@
 		[...data.crowns.entries()].sort((a, b) => b[1] - a[1]).map(([id, n]) => ({ id, n }))
 	);
 	const active = $derived(data.players.filter((p) => p.active));
+	type Stats = (typeof data.stats)[number];
+	const STREAK = { win: 'kings.streakWin', loss: 'kings.streakLoss', draw: 'kings.streakDraw' } as const;
+	const streakText = (s: NonNullable<Stats['streak']>) => t(STREAK[s.outcome], { n: s.n });
+	const rival = (r: Stats['nemesis']) =>
+		r ? `${name(r.opponentId)} · ${t('preview.record', { w: r.w, d: r.d, l: r.l })}` : t('kings.nobody');
 	const fmt = $derived(new Intl.DateTimeFormat(dateLocale(), { day: 'numeric', month: 'short' }));
 </script>
 
@@ -79,6 +84,42 @@
 		</tbody>
 	</table>
 </section>
+
+{#if data.stats.length}
+	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('kings.stats')}</h2>
+	<section class="mb-6 grid gap-2" data-stats>
+		{#each data.stats as s (s.playerId)}
+			<article class="card px-4 py-3" data-player={s.playerId}>
+				<div class="flex items-baseline justify-between gap-3">
+					<p class="min-w-0 truncate font-medium text-silver">{name(s.playerId)}</p>
+					{#if s.streak}
+						<p class="shrink-0 text-xs {s.streak.outcome === 'win' && s.streak.n > 1 ? 'text-gold' : 'text-muted'}">
+							{streakText(s.streak)}
+						</p>
+					{/if}
+				</div>
+				<dl class="mt-2 grid grid-cols-3 gap-2 text-center">
+					{#each [[t('kings.played'), String(s.played)], [t('kings.winRate'), s.winRate === null ? '—' : t('kings.percent', { n: s.winRate })], [t('kings.bestStreak'), String(s.bestWinStreak)]] as [label, value] (label)}
+						<div class="rounded-lg bg-board/60 px-1 py-1.5">
+							<dt class="truncate text-[10px] tracking-wider text-muted uppercase">{label}</dt>
+							<dd class="font-semibold text-silver tabular-nums">{value}</dd>
+						</div>
+					{/each}
+				</dl>
+				<dl class="mt-2 grid gap-0.5 text-xs">
+					<div class="flex justify-between gap-3">
+						<dt class="shrink-0 text-muted">{t('kings.nemesis')}</dt>
+						<dd class="min-w-0 truncate text-silver">{rival(s.nemesis)}</dd>
+					</div>
+					<div class="flex justify-between gap-3">
+						<dt class="shrink-0 text-muted">{t('kings.victim')}</dt>
+						<dd class="min-w-0 truncate text-silver">{rival(s.victim)}</dd>
+					</div>
+				</dl>
+			</article>
+		{/each}
+	</section>
+{/if}
 
 {#if active.length > 1}
 	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('kings.headToHead')}</h2>

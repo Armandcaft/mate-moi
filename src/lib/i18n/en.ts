@@ -118,7 +118,20 @@ export const en = {
 		crowns: { one: '{n} crown', other: '{n} crowns' },
 		allTime: 'Overall standings · group stage',
 		noGames: 'No confirmed games yet.',
-		headToHead: 'Head to head · W-D-L, all stages'
+		headToHead: 'Head to head · W-D-L, all stages',
+		stats: 'Stats · all stages',
+		games: { one: '{n} game', other: '{n} games' },
+		winRate: 'Wins',
+		percent: '{n}%',
+		bestStreak: 'Best streak',
+		played: 'Games',
+		streakWin: { one: '{n} win', other: '{n} wins in a row' },
+		streakLoss: { one: '{n} loss', other: '{n} losses in a row' },
+		streakDraw: { one: '{n} draw', other: '{n} draws in a row' },
+		streakNow: 'Right now',
+		nemesis: 'Nemesis',
+		victim: 'Favourite victim',
+		nobody: 'nobody'
 	},
 	login: {
 		title: 'Sign in',
