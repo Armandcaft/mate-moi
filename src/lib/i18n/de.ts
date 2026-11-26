@@ -68,7 +68,10 @@ export const de = {
 		draw: 'Remis',
 		wins: '{name} gewinnt',
 		whoWon: 'Wer hat gewonnen?',
-		whoWonArmageddon: 'Wer hat gewonnen? Remis zählt als Sieg für Schwarz.'
+		whoWonArmageddon: 'Wer hat gewonnen? Remis zählt als Sieg für Schwarz.',
+		autoIn: 'Wird in {n} Std. automatisch bestätigt',
+		autoSoon: 'Wird in weniger als einer Stunde automatisch bestätigt',
+		autoConfirmed: 'automatisch bestätigt'
 	},
 	week: {
 		label: 'Woche {n}',

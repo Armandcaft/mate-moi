@@ -5,6 +5,7 @@ import { SESSION_COOKIE, lockMessage, lockedFor, recordFailure } from '#lib/serv
 import { db, players } from '#lib/server/db/index.ts';
 import { verifyPin } from '#lib/server/pin.ts';
 import { ProfileError, rename, setSlogan } from '#lib/server/profile.ts';
+import { sweep } from '#lib/server/league.ts';
 import { say, type Locale } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -56,6 +57,7 @@ export const actions: Actions = {
 		if (isLastAdmin(me.id)) return refuse(400, say(locals.locale, { key: 'profile.lastAdmin' }));
 
 		try {
+			sweep(); // leaving settles their games in the week as it stands now
 			deleteAccount(me.id);
 		} catch (e) {
 			if (e instanceof AccountError) return refuse(400, say(locals.locale, e));

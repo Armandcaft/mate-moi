@@ -11,12 +11,17 @@ import {
 	setArchived,
 	transferOwnership
 } from '#lib/server/admin.ts';
+import { sweep } from '#lib/server/league.ts';
 import { say, translator } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 
-/** Admins only. Others get the same 404 as a page that does not exist. */
+/**
+ * Admins only. Others get the same 404 as a page that does not exist. Every load and action
+ * passes here, so the week's time rules are applied first (`sweep`).
+ */
 function admin(locals: App.Locals) {
 	if (!locals.player?.isAdmin) error(404, translator(locals.locale)('common.pageNotFound'));
+	sweep();
 	return locals.player;
 }
 

@@ -1,6 +1,6 @@
 import { playerName } from '#lib/format.ts';
 import { translator } from '#lib/i18n/index.ts';
-import { latestWeek, weekView } from '#lib/server/league.ts';
+import { latestWeek, sweep, weekView } from '#lib/server/league.ts';
 import { shareKey, standingsLine } from '#lib/server/og.ts';
 import type { PageServerLoad } from './$types';
 
@@ -10,6 +10,7 @@ import type { PageServerLoad } from './$types';
  */
 export const load: PageServerLoad = ({ url, locals }) => {
 	const t = translator(locals.locale);
+	sweep();
 	const week = latestWeek();
 	const view = week ? weekView(week) : null;
 	const step = view?.step;

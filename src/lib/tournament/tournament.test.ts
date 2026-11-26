@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+	HOUR_MS,
+	autoConfirmAt,
 	departures,
+	dueAt,
+	hoursUntil,
+	type TimedGame,
 	gamesPerPairFor,
 	gamesPerPairIn,
 	groupSchedule,
@@ -366,5 +371,43 @@ describe('departures (a player leaves mid-week)', () => {
 		const [final] = nextStep(PLAYERS, games).create;
 		const done = [...games, { ...final, result: beats(final, A) }];
 		expect(departures(PLAYERS, done, new Set([A]))).toEqual({ drop: [], forfeit: [] });
+	});
+});
+
+describe('the clock: auto-confirm after 48 h', () => {
+	const H = HOUR_MS;
+	const t0 = Date.UTC(2026, 10, 23, 12);
+	const pending = (id: number, reportedAt: number | null, result: Result | null = '1-0'): TimedGame => ({
+		id,
+		stage: 'group',
+		result,
+		reportedAt,
+		confirmedAt: null
+	});
+
+	it('confirms a result nobody answered for 48 h, as of the 48th hour', () => {
+		expect(dueAt([pending(1, t0)], t0 + 48 * H)).toEqual({ confirm: [{ id: 1, at: t0 + 48 * H }] });
+		expect(dueAt([pending(1, t0)], t0 + 72 * H).confirm[0].at).toBe(t0 + 48 * H);
+	});
+
+	it('waits at 47 h', () => {
+		expect(dueAt([pending(1, t0)], t0 + 47 * H)).toEqual({ confirm: [] });
+		expect(dueAt([pending(1, t0)], t0 + 48 * H - 1)).toEqual({ confirm: [] });
+	});
+
+	it('ignores unreported and already confirmed games', () => {
+		const confirmed = { ...pending(2, t0), confirmedAt: t0 + H };
+		expect(dueAt([pending(1, null, null), confirmed], t0 + 100 * H)).toEqual({ confirm: [] });
+		expect(autoConfirmAt(confirmed)).toBeNull();
+		expect(autoConfirmAt(pending(1, null, null))).toBeNull();
+	});
+
+	it('counts the hours left, rounded, 0 under an hour', () => {
+		const at = t0 + 48 * H;
+		expect(hoursUntil(at, t0 + 17 * H)).toBe(31);
+		expect(hoursUntil(at, t0 + 17 * H + 20 * 60_000)).toBe(31); // 30 h 40 → 31
+		expect(hoursUntil(at, t0 + 47 * H - 60_000)).toBe(1);
+		expect(hoursUntil(at, t0 + 47 * H + 60_000)).toBe(0);
+		expect(hoursUntil(at, t0 + 50 * H)).toBe(0);
 	});
 });

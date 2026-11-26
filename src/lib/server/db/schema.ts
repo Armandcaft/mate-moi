@@ -96,6 +96,8 @@ export const games = sqliteTable(
 		reportedById: integer('reported_by_id').references(() => players.id),
 		reportedAt: integer('reported_at', { mode: 'timestamp' }),
 		confirmedAt: integer('confirmed_at', { mode: 'timestamp' }),
+		/** Confirmed by the clock, not the opponent: nobody answered for 48 h (`sweep` in league.ts). */
+		autoConfirmed: integer('auto_confirmed', { mode: 'boolean' }).notNull().default(false),
 		createdAt: createdAt()
 	},
 	(t) => [index('games_week_idx').on(t.weekId)]

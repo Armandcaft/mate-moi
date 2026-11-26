@@ -69,7 +69,10 @@ export const fr = {
 		draw: 'Nulle',
 		wins: '{name} gagne',
 		whoWon: 'Qui a gagné ?',
-		whoWonArmageddon: 'Qui a gagné ? Une nulle compte comme une victoire des Noirs.'
+		whoWonArmageddon: 'Qui a gagné ? Une nulle compte comme une victoire des Noirs.',
+		autoIn: 'Validé automatiquement dans {n} h',
+		autoSoon: 'Validé automatiquement dans moins d’une heure',
+		autoConfirmed: 'validé automatiquement'
 	},
 	week: {
 		label: 'Semaine {n}',

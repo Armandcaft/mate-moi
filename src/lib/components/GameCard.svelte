@@ -3,13 +3,22 @@
 	import { describe, playerName, score } from '#lib/format.ts';
 	import { t } from '#lib/i18n/t.svelte.ts';
 	import type { GameRow } from '#lib/server/db/schema.ts';
+	import { AUTO_CONFIRM_MS, hoursUntil } from '#lib/tournament/clock.ts';
 
 	let {
 		game,
 		names,
 		meId,
-		open
-	}: { game: GameRow; names: Map<number, { name: string; deletedAt: Date | null }>; meId: number; open: boolean } = $props();
+		open,
+		now
+	}: {
+		game: GameRow;
+		names: Map<number, { name: string; deletedAt: Date | null }>;
+		meId: number;
+		open: boolean;
+		/** The page's clock (from the server, so both render the same countdown). */
+		now: number;
+	} = $props();
 
 	const white = $derived(playerName(t, names.get(game.whiteId)));
 	const black = $derived(playerName(t, names.get(game.blackId)));
@@ -17,6 +26,10 @@
 	const confirmed = $derived(!!game.confirmedAt);
 	const pending = $derived(!!game.result && !confirmed);
 	const iMustConfirm = $derived(pending && mine && game.reportedById !== meId);
+	/** Hours until a pending result counts on its own (`sweep`); 0 = under an hour. */
+	const autoIn = $derived(
+		pending && game.reportedAt ? hoursUntil(game.reportedAt.getTime() + AUTO_CONFIRM_MS, now) : null
+	);
 	const opponent = $derived(game.whiteId === game.reportedById ? black : white);
 
 	const winnerId = $derived(
@@ -63,6 +76,11 @@
 			{t('game.declared')} <span class="text-silver">{describe(t, game.result, white, black)}</span>
 			{#if !iMustConfirm}· {t('game.waitingFor', { name: opponent })}{/if}
 		</p>
+		{#if autoIn !== null}
+			<p class="mt-1 text-center text-[11px] text-muted">
+				{autoIn ? t('game.autoIn', { n: autoIn }) : t('game.autoSoon')}
+			</p>
+		{/if}
 		{#if iMustConfirm}
 			<form method="POST" class="mt-3 grid grid-cols-2 gap-2" use:enhance={submit}>
 				<input type="hidden" name="game" value={game.id} />
@@ -70,6 +88,8 @@
 				<button formaction="?/confirm" class="btn btn-gold" disabled={busy}>{t('game.confirm')}</button>
 			</form>
 		{/if}
+	{:else if confirmed && game.autoConfirmed}
+		<p class="mt-2 text-center text-[11px] text-muted italic">{t('game.autoConfirmed')}</p>
 	{:else if open && !game.result && mine}
 		<form method="POST" action="?/report" class="mt-4 grid {game.armageddon ? 'grid-cols-2' : 'grid-cols-3'} gap-2" use:enhance={submit}>
 			<input type="hidden" name="game" value={game.id} />

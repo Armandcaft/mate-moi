@@ -191,7 +191,7 @@
 			<h2 class="mb-3 text-xs tracking-[0.2em] text-gold uppercase">{t('week.yourMove')}</h2>
 			<div class="grid gap-3">
 				{#each todo as game (game.id)}
-					<GameCard {game} names={view.players} meId={me.id} {open} />
+					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} />
 				{/each}
 			</div>
 		</section>
@@ -202,7 +202,7 @@
 			<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('week.knockout')}</h2>
 			<div class="grid gap-3">
 				{#each knockout.filter((g) => !todoIds.has(g.id)) as game (game.id)}
-					<GameCard {game} names={view.players} meId={me.id} {open} />
+					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} />
 				{/each}
 			</div>
 		</section>
@@ -213,7 +213,7 @@
 			<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('phase.group')}</h2>
 			<div class="grid gap-3">
 				{#each groupGames.filter((g) => !todoIds.has(g.id)) as game (game.id)}
-					<GameCard {game} names={view.players} meId={me.id} {open} />
+					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} />
 				{/each}
 			</div>
 		</section>

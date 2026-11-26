@@ -1,4 +1,7 @@
-import { hall } from '#lib/server/league.ts';
+import { hall, sweep } from '#lib/server/league.ts';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = () => hall();
+export const load: PageServerLoad = () => {
+	sweep();
+	return hall();
+};

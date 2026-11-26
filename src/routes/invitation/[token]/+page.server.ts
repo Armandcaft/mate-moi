@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { AdminError, acceptInvite, inviteIsValid } from '#lib/server/admin.ts';
 import { createSession } from '#lib/server/auth.ts';
+import { sweep } from '#lib/server/league.ts';
 import { say } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -20,6 +21,7 @@ export const actions: Actions = {
 		if (pin !== String(form.get('confirm') ?? ''))
 			return fail(400, { name, message: say(locals.locale, { key: 'invite.mismatch' }) });
 		let week: 'joined' | 'next-week';
+		sweep(); // the week's state decides whether they join it now
 		try {
 			const joined = acceptInvite(params.token, name, pin);
 			createSession(cookies, joined.id, url.protocol === 'https:');

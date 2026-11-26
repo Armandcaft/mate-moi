@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import {
 	departures,
+	dueAt,
 	gamesPerPairFor,
 	gamesPerPairIn,
 	groupSchedule,
@@ -11,7 +12,8 @@ import {
 	type Game,
 	type Line,
 	type Result,
-	type Step
+	type Step,
+	type TimedGame
 } from '../tournament';
 import type { MessageKey, Problem } from '../i18n/index.ts';
 import { db, games, players, weeks, type GameRow, type Player, type Week } from './db';
@@ -288,6 +290,48 @@ function advance(tx: Tx, weekId: number) {
 		return;
 	}
 	throw new Error(`week ${weekId}: advance did not settle`);
+}
+
+const ms = (d: Date | null) => (d ? d.getTime() : null);
+const timed = (g: GameRow): TimedGame => ({
+	id: g.id,
+	stage: g.stage,
+	result: g.result,
+	reportedAt: ms(g.reportedAt),
+	confirmedAt: ms(g.confirmedAt)
+});
+
+/**
+ * Apply every rule that time has made due, then move the week on: a result nobody answered for
+ * 48 h counts as reported.
+ *
+ * The server sleeps when idle (Fly.io stops the machine), so no timer could be trusted to fire:
+ * instead every page and action that reads or writes the week calls this first, and the rules
+ * are applied late but with the time they fell due (`confirmedAt` = reported + 48 h). With nothing
+ * due it costs one query: the open week's unconfirmed games (`games_week_idx`).
+ */
+export function sweep(now = new Date()) {
+	db.transaction((tx) => {
+		const rows = tx
+			.select({ game: games })
+			.from(games)
+			.innerJoin(weeks, eq(weeks.id, games.weekId))
+			.where(and(isNull(weeks.closedAt), isNull(games.confirmedAt)))
+			.all()
+			.map((r) => r.game);
+		const due = dueAt(rows.map(timed), now.getTime());
+		if (!due.confirm.length) return;
+
+		const weekIds = new Set<number>();
+		for (const { id, at } of due.confirm) {
+			tx.update(games)
+				.set({ confirmedAt: new Date(at), autoConfirmed: true })
+				.where(and(eq(games.id, id), isNull(games.confirmedAt)))
+				.run();
+			weekIds.add(rows.find((g) => g.id === id)!.weekId);
+		}
+		for (const weekId of weekIds) advance(tx, weekId);
+	});
 }
 
 /**

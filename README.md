@@ -32,7 +32,8 @@
 
 1. **Someone starts the week.** The app schedules every pairing and picks colours.
 2. **Play anywhere** (a real board, Lichess, the office). Then one player taps the winner, or *Draw*.
-3. **The opponent confirms** or disputes. Only confirmed results count.
+3. **The opponent confirms** or disputes. Only confirmed results count; one left unanswered for
+   48 h counts as reported.
 4. **The top two play the final.** A drawn final goes to Armageddon.
 5. **♔ The King is crowned,** their motto shows up, and the standings go to WhatsApp as an image.
 
@@ -45,6 +46,7 @@
 | 📲 **WhatsApp previews** | the share link unfurls into a standings card, King and motto included |
 | ✉️ **Invite links** | one-time, 48 h; newcomers pick their own name and code, and can join mid-week |
 | 🙋 **Profiles** | change your name, your motto (60 characters), your code; delete your account (your games stay, as “Deleted player”) |
+| ⏱️ **Auto-confirm** | a result nobody confirms or disputes for 48 h counts; the card counts the hours down |
 | 🚪 **Leaving mid-week** | an archived or deleted player's group games are dropped, or their play-off and final games forfeited, so the week still crowns a King |
 | 🛡️ **Admin tab** | invites, temporary codes, archiving, deletion, promotion, one-click backup |
 | 👑 **One owner** | set from the command line; nobody can demote, archive or delete them; they hand the league on from the Admin tab |

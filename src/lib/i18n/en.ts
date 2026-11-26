@@ -68,7 +68,10 @@ export const en = {
 		draw: 'Draw',
 		wins: '{name} wins',
 		whoWon: 'Who won?',
-		whoWonArmageddon: 'Who won? A draw counts as a win for Black.'
+		whoWonArmageddon: 'Who won? A draw counts as a win for Black.',
+		autoIn: 'Confirmed automatically in {n} h',
+		autoSoon: 'Confirmed automatically in under an hour',
+		autoConfirmed: 'confirmed automatically'
 	},
 	week: {
 		label: 'Week {n}',

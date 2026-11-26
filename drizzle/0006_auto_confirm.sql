@@ -1,0 +1,1 @@
+ALTER TABLE `games` ADD `auto_confirmed` integer DEFAULT false NOT NULL;

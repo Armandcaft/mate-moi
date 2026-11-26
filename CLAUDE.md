@@ -20,6 +20,12 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   here, with a test.
 - `src/lib/server/league.ts` — the only code that writes games/weeks. Every write is a transaction;
   `confirmResult` calls `advance`, which inserts whatever `nextStep` asks for or crowns the king.
+- **Time rules run lazily: `sweep(now)` (league.ts), no cron.** Fly.io stops the idle machine, so
+  no timer can be trusted; every load/action that reads or writes the week (week page, `/rois`,
+  og/partage, admin, invitation, account deletion) calls `sweep()` first. One transaction applies
+  what is due, with the time it fell due (a result unanswered for 48 h: `confirmed_at` =
+  `reported_at` + 48 h, `auto_confirmed`), then `advance`. Nothing due = one query. The "is it due"
+  decisions are pure and take `now` (`tournament/clock.ts`); never `Date.now()` in the tournament layer.
 - `src/lib/server/auth.ts`, `pin.ts` — PIN login, hashed sessions, a lockout stored on the player
   row (not in memory: Fly.io restarts the idle machine). CLI codes are temporary (`must_change_pin`);
   the hook sends such a player to `/code` until they choose their own.
