@@ -52,7 +52,7 @@
 | 🚪 **Leaving mid-week** | an archived or deleted player's group games are dropped, or their play-off and final games forfeited, so the week still crowns a King |
 | 📊 **Stats** | in the Hall of Kings: current and best streaks, win rate, games played, your *bête noire* and your favourite victim |
 | 🛡️ **Admin tab** | invites, temporary codes, archiving, deletion, promotion, one-click backup |
-| 👑 **One owner** | set from the command line; nobody can demote, archive or delete them; they hand the league on from the Admin tab |
+| 👑 **One owner** | set from the command line; nobody can demote, archive or delete them; they hand the league on from the Admin tab, and can **reset the league** (everyone but them deleted, a safety copy kept first) |
 | 🔔 **Push notifications** | a result to confirm, your final, the new King, an auto-confirmed result; each in your language; opt in on your profile |
 | 🌍 **Three languages** | French (default), English, German; follows the phone, switchable anytime |
 | 🌗 **Light & dark** | black-and-gold or ivory board; follows the phone, or pick one on your profile |
@@ -178,6 +178,10 @@ fly secrets set LITESTREAM_REPLICA_URL=s3://my-bucket/mate-moi \
   LITESTREAM_ACCESS_KEY_ID=… LITESTREAM_SECRET_ACCESS_KEY=…
 ```
 For R2 or B2, also add `endpoint:` in `litestream.yml`.
+**Reset (owner only, at your own risk)**: *Admin → Réinitialiser la ligue* deletes every other
+player, week, game, invite and notification, after typing the confirmation word and the owner's
+code. A full copy is written first as `before-reset-<date>.db` next to the database: restore it
+like any backup to undo the reset.
 </details>
 
 ## 🗂️ Inside

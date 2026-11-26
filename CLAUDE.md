@@ -57,6 +57,9 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   or deletes them, in the app (`setAdmin`, `refuseOwner` in `accounts.ts`, buttons hidden) or the
   CLI; they cannot delete themselves. They hand it on with *transfer* (`transferOwnership`) to
   another active admin. They may still get a temporary code.
+  Only they can **reset the league** (`resetLeague` in admin.ts, the `wipe` action): typed word +
+  their code (login lockout); a `before-reset-<stamp>.db` safety copy is written next to the
+  database first, then every other player, week, game, invite, session and subscription is deleted.
 - Leaving: **archive** = `active` false (reversible); **delete** (`src/lib/server/accounts.ts`) =
   `deleted_at`, name `~deleted-<id>`, code unusable, sessions and unused invites gone, games kept and
   shown as « Joueur supprimé » via `playerName` (`format.ts`); a player with no game is removed

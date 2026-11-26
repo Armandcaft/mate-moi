@@ -267,7 +267,18 @@ export const en = {
 		deadlineSave: 'Change the deadline',
 		deadlineHint:
 			'At the deadline, pending results count as reported and unplayed games end 0 – 0 (lost by both, no points). Then the play-off or the final, with no deadline.',
-		deadlineSaved: 'New deadline: {when}.'
+		deadlineSaved: 'New deadline: {when}.',
+		wipeTitle: 'Reset the league',
+		wipeRisk: 'At your own risk',
+		wipeIntro: 'Deletes every other player, every week, game and crown, the invites and the notifications. Only your account is left, so you can invite everyone again from scratch.',
+		wipeSafety: 'A full copy is kept on the server right before. Still, download a backup above.',
+		wipeOpen: 'I want to delete everything',
+		wipeWord: 'RESET',
+		wipeTypeWord: 'Type {word} to confirm',
+		wipeCode: 'Your code',
+		wipeButton: 'Delete everything',
+		wipeWordMismatch: 'Type exactly {word}.',
+		wipeDone: 'League reset. Safety copy kept on the server: {file}.'
 	},
 	league: {
 		weekNotOver: 'This week isn’t over yet.',

@@ -7,12 +7,17 @@ import {
 	resetPin,
 	revokeInvite,
 	deletePlayer,
+	resetLeague,
 	setAdmin,
 	setArchived,
 	transferOwnership
 } from '#lib/server/admin.ts';
 import { LeagueError, latestWeek, setDeadline, sweep, weekView } from '#lib/server/league.ts';
 import { say, translator } from '#lib/i18n/index.ts';
+import { lockMessage, lockedFor, recordFailure } from '#lib/server/auth.ts';
+import { db, players } from '#lib/server/db/index.ts';
+import { verifyPin } from '#lib/server/pin.ts';
+import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 
 /**
@@ -37,6 +42,10 @@ export const load: PageServerLoad = ({ locals }) => {
 		groupWeek: view?.step.phase === 'group' ? { number: view.week.number, deadline: view.week.deadline } : null
 	};
 };
+
+/** "RÉINITIALISER", "reinitialiser" and "Réinitialiser " all match: case, accents and spaces don't count. */
+const loose = (s: string) =>
+	s.normalize('NFD').replace(/\p{M}/gu, '').replace(/\s+/g, '').toUpperCase();
 
 /** Run an admin action on the `player` in the form, turning refusals into a page message. */
 async function onPlayer(
@@ -90,6 +99,30 @@ export const actions: Actions = {
 		onPlayer(e, (me, id, form) => ({
 			transferred: transferOwnership(me, id, String(form.get('name') ?? ''))
 		})),
+	/**
+	 * The owner wipes the league, keeping only their own account. Owner only (anyone else: the same
+	 * 404 as a missing page), after the typed confirmation word and their current code, which counts
+	 * toward the same lockout as the login. A safety copy is written first (`resetLeague`).
+	 */
+	wipe: async ({ request, locals }) => {
+		const me = admin(locals);
+		const t = translator(locals.locale);
+		if (!me.isOwner) error(404, t('common.pageNotFound'));
+		const form = await request.formData();
+		const refuse = (status: number, message: string) => fail(status, { wipeMessage: message });
+
+		if (loose(String(form.get('word') ?? '')) !== loose(t('admin.wipeWord')))
+			return refuse(400, t('admin.wipeWordMismatch', { word: t('admin.wipeWord') }));
+		const row = db.select().from(players).where(eq(players.id, me.id)).get()!;
+		const wait = lockedFor(row);
+		if (wait > 0) return refuse(429, say(locals.locale, lockMessage(wait)));
+		if (!verifyPin(String(form.get('pin') ?? ''), row.pinHash)) {
+			const locked = recordFailure(row.id);
+			if (locked) return refuse(429, say(locals.locale, lockMessage(locked)));
+			return refuse(400, t('login.wrongCode'));
+		}
+		return { wiped: await resetLeague(me.id) };
+	},
 	promote: (e) => onPlayer(e, (me, id) => setAdmin(me, id, true)),
 	demote: (e) => onPlayer(e, (me, id) => setAdmin(me, id, false))
 };

@@ -270,7 +270,18 @@ export const fr = {
 		deadlineSave: 'Changer la date limite',
 		deadlineHint:
 			'À la date limite, les résultats en attente comptent tels que déclarés et les parties non jouées finissent 0 – 0 (perdues par les deux, zéro point). Puis barrage ou finale, sans date limite.',
-		deadlineSaved: 'Nouvelle date limite : {when}.'
+		deadlineSaved: 'Nouvelle date limite : {when}.',
+		wipeTitle: 'Réinitialiser la ligue',
+		wipeRisk: 'À tes risques et périls',
+		wipeIntro: 'Efface tous les autres joueurs, toutes les semaines, parties et couronnes, les invitations et les notifications. Il ne reste que ton compte, pour réinviter tout le monde à zéro.',
+		wipeSafety: 'Juste avant, une copie complète est gardée sur le serveur. Télécharge quand même une sauvegarde ci-dessus.',
+		wipeOpen: 'Je veux tout effacer',
+		wipeWord: 'RÉINITIALISER',
+		wipeTypeWord: 'Tape {word} pour confirmer',
+		wipeCode: 'Ton code',
+		wipeButton: 'Tout effacer',
+		wipeWordMismatch: 'Tape exactement {word}.',
+		wipeDone: 'Ligue remise à zéro. Copie de sécurité gardée sur le serveur : {file}.'
 	},
 	league: {
 		weekNotOver: 'La semaine en cours n’est pas terminée.',

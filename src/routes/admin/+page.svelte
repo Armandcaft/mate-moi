@@ -33,6 +33,11 @@
 		hydrated = true;
 	});
 
+	/** The reset's confirmation word, compared like the server does (case, accents, spaces ignored). */
+	let wipeWord = $state('');
+	const loose = (v: string) => v.normalize('NFD').replace(/\p{M}/gu, '').replace(/\s+/g, '').toUpperCase();
+	const wipeReady = $derived(loose(wipeWord) === loose(t('admin.wipeWord')));
+
 	/** In the sharer's language: they know who they are inviting. */
 	const inviteMessage = (link: string) => t('admin.inviteMessage', { link });
 </script>
@@ -249,10 +254,68 @@
 </section>
 
 <!-- Backup -->
-<section>
+<section class={data.meIsOwner ? 'mb-8' : ''}>
 	<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('admin.backup')}</h2>
 	<a href="/admin/sauvegarde" class="btn btn-ghost w-full" data-sveltekit-reload>{t('admin.download')}</a>
 	<p class="mt-2 text-xs text-muted">
 		{t('admin.backupHint')}
 	</p>
 </section>
+
+<!-- Reset: the owner only -->
+{#if data.meIsOwner}
+	<section aria-labelledby="wipe-title">
+		{#if form?.wiped}
+			<p class="card mb-3 border-gold/50 px-4 py-3 text-sm text-gold" role="status">
+				{t('admin.wipeDone', { file: String(form.wiped) })}
+			</p>
+		{/if}
+		<div class="card border-danger/50 p-4">
+			<h2 id="wipe-title" class="text-sm font-semibold text-danger">{t('admin.wipeTitle')}</h2>
+			<p class="mt-0.5 text-[11px] tracking-[0.2em] text-danger uppercase">{t('admin.wipeRisk')}</p>
+			<p class="mt-3 text-sm text-muted">{t('admin.wipeIntro')}</p>
+			<p class="mt-2 text-xs text-muted">{t('admin.wipeSafety')}</p>
+
+			{#if form?.wipeMessage}
+				<p class="mt-3 text-sm text-danger" role="alert">{form.wipeMessage}</p>
+			{/if}
+			<!-- Open/closed is left to the browser: a bound `open` would be re-applied on every keystroke. -->
+			<details class="mt-4">
+				<summary class="cursor-pointer text-sm text-danger hover:underline">{t('admin.wipeOpen')}</summary>
+				<form method="POST" action="?/wipe" class="mt-3 space-y-3" use:enhance={() => async ({ update }) => {
+					await update();
+					wipeWord = '';
+				}}>
+					<label class="block">
+						<span class="mb-1.5 block text-xs text-muted">{t('admin.wipeTypeWord', { word: t('admin.wipeWord') })}</span>
+						<input
+							name="word"
+							bind:value={wipeWord}
+							autocomplete="off"
+							autocapitalize="characters"
+							spellcheck="false"
+							required
+							class="w-full rounded-xl border border-line bg-surface px-4 py-2.5 font-medium tracking-widest text-silver outline-none focus:border-danger"
+						/>
+					</label>
+					<label class="block">
+						<span class="mb-1.5 block text-xs text-muted">{t('admin.wipeCode')}</span>
+						<input
+							name="pin"
+							type="password"
+							inputmode="numeric"
+							autocomplete="current-password"
+							pattern="[0-9]*"
+							maxlength="8"
+							required
+							class="w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-center text-xl tracking-[0.5em] text-silver outline-none focus:border-danger"
+						/>
+					</label>
+					<button class="btn w-full border border-danger bg-danger/10 text-danger" disabled={hydrated && !wipeReady}>
+						{t('admin.wipeButton')}
+					</button>
+				</form>
+			</details>
+		</div>
+	</section>
+{/if}

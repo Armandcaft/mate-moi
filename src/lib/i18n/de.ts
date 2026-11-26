@@ -269,7 +269,18 @@ export const de = {
 		deadlineSave: 'Frist ändern',
 		deadlineHint:
 			'Bei Fristende zählen offene Ergebnisse wie gemeldet, und ungespielte Partien enden 0 – 0 (für beide verloren, keine Punkte). Danach Stechen oder Finale, ohne Frist.',
-		deadlineSaved: 'Neue Frist: {when}.'
+		deadlineSaved: 'Neue Frist: {when}.',
+		wipeTitle: 'Liga zurücksetzen',
+		wipeRisk: 'Auf eigene Gefahr',
+		wipeIntro: 'Löscht alle anderen Spieler, alle Wochen, Partien und Kronen, die Einladungen und die Benachrichtigungen. Nur dein Konto bleibt, damit du alle neu einladen kannst.',
+		wipeSafety: 'Direkt vorher wird eine vollständige Kopie auf dem Server gespeichert. Lad trotzdem oben ein Backup runter.',
+		wipeOpen: 'Ich will alles löschen',
+		wipeWord: 'ZURÜCKSETZEN',
+		wipeTypeWord: 'Tipp {word} zum Bestätigen',
+		wipeCode: 'Dein Code',
+		wipeButton: 'Alles löschen',
+		wipeWordMismatch: 'Tipp genau {word}.',
+		wipeDone: 'Liga zurückgesetzt. Sicherheitskopie auf dem Server: {file}.'
 	},
 	league: {
 		weekNotOver: 'Die laufende Woche ist noch nicht vorbei.',

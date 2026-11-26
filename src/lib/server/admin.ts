@@ -3,11 +3,11 @@ import { and, asc, desc, eq, gt, isNull, ne } from 'drizzle-orm';
 import { randomBytes, randomInt } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import type { MessageKey, Params, Problem } from '../i18n/index.ts';
 import { AccountError, deleteAccount, setArchived as archive } from './accounts.ts';
 import { sha256 } from './auth.ts';
-import { db, invites, players, sessions, sqlite, type Player } from './db/index.ts';
+import { db, games, invites, players, pushSubscriptions, sessions, sqlite, weeks, type Player } from './db/index.ts';
 import { joinCurrentWeek } from './league.ts';
 import { hashPin, newPinProblem } from './pin.ts';
 import { ProfileError, checkedName } from './profile.ts';
@@ -230,4 +230,34 @@ export async function backupBytes(): Promise<Buffer> {
 	} finally {
 		rmSync(dir, { recursive: true, force: true });
 	}
+}
+
+// ── Reset ───────────────────────────────────────────────────────────────────────
+
+/**
+ * The owner's "start again": every other player, every week, game and King, every invite, and the
+ * others' sessions and notifications are deleted. The owner's own account stays, signed in.
+ *
+ * A full copy of the database is written next to it first (`before-reset-<stamp>.db`), so a reset
+ * made by mistake can be undone like any restore (README, "Backup, restore"). Returns its file name.
+ * The caller checks that `ownerId` is the owner and has typed the confirmation and their code.
+ */
+export async function resetLeague(ownerId: number): Promise<string> {
+	const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+	const safety = join(dirname(sqlite.name), `before-reset-${stamp}.db`);
+	await sqlite.backup(safety);
+
+	db.transaction((tx) => {
+		tx.delete(pushSubscriptions).where(ne(pushSubscriptions.playerId, ownerId)).run();
+		tx.delete(sessions).where(ne(sessions.playerId, ownerId)).run();
+		tx.delete(invites).run();
+		tx.delete(games).run();
+		tx.delete(weeks).run();
+		tx.delete(players).where(ne(players.id, ownerId)).run();
+		tx.update(players)
+			.set({ active: true, isAdmin: true, failedLogins: 0, lockedUntil: null })
+			.where(eq(players.id, ownerId))
+			.run();
+	});
+	return basename(safety);
 }
