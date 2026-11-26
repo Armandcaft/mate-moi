@@ -26,6 +26,11 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   what is due, with the time it fell due (a result unanswered for 48 h: `confirmed_at` =
   `reported_at` + 48 h, `auto_confirmed`), then `advance`. Nothing due = one query. The "is it due"
   decisions are pure and take `now` (`tournament/clock.ts`); never `Date.now()` in the tournament layer.
+- **`'0-0'`** is a result no player can report (`REPORTABLE`): an unplayed group game closed by
+  the week's deadline (`weeks.deadline`, start + 7 days, admins move it; group stage only). It
+  counts as played and lost by both, no points, 0 each in head-to-head; cards say « non jouée ».
+  Anything that switches on a result must handle it (`scoreFor`, `describe`, the Hall's h2h, stats).
+  Dates shown to players use `timeZone()` (`zone.svelte.ts`): UTC until hydrated, then the device's.
 - `src/lib/server/auth.ts`, `pin.ts` — PIN login, hashed sessions, a lockout stored on the player
   row (not in memory: Fly.io restarts the idle machine). CLI codes are temporary (`must_change_pin`);
   the hook sends such a player to `/code` until they choose their own.

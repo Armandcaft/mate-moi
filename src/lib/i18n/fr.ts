@@ -72,7 +72,8 @@ export const fr = {
 		whoWonArmageddon: 'Qui a gagné ? Une nulle compte comme une victoire des Noirs.',
 		autoIn: 'Validé automatiquement dans {n} h',
 		autoSoon: 'Validé automatiquement dans moins d’une heure',
-		autoConfirmed: 'validé automatiquement'
+		autoConfirmed: 'validé automatiquement',
+		notPlayed: 'non jouée'
 	},
 	week: {
 		label: 'Semaine {n}',
@@ -98,7 +99,11 @@ export const fr = {
 		yourMove: 'À toi de jouer',
 		knockout: 'Barrage et finale',
 		shareKing: '♔ {name} est le Roi de la Semaine {n} ! Qui ose le détrôner ?',
-		abandoned: 'Il ne reste pas assez de joueurs cette semaine : pas de roi. On remet ça la semaine prochaine.'
+		abandoned: 'Il ne reste pas assez de joueurs cette semaine : pas de roi. On remet ça la semaine prochaine.',
+		deadline: 'Date limite : {when}',
+		today: 'aujourd’hui',
+		tomorrow: 'demain',
+		inDays: 'dans {n} j'
 	},
 	nudge: {
 		button: 'Relancer',
@@ -247,7 +252,13 @@ export const fr = {
 		transferIntro:
 			'Tu restes admin, mais c’est {name} qui deviendra intouchable : ni retiré des admins, ni archivé, ni supprimé. Tape son nom pour confirmer.',
 		transferConfirm: 'Transférer',
-		transferred: '{name} est maintenant le propriétaire de la ligue.'
+		transferred: '{name} est maintenant le propriétaire de la ligue.',
+		week: 'Semaine en cours',
+		deadline: 'Date limite de la phase de groupes',
+		deadlineSave: 'Changer la date limite',
+		deadlineHint:
+			'À la date limite, les résultats en attente comptent tels que déclarés et les parties non jouées finissent 0 – 0 (perdues par les deux, zéro point). Puis barrage ou finale, sans date limite.',
+		deadlineSaved: 'Nouvelle date limite : {when}.'
 	},
 	league: {
 		weekNotOver: 'La semaine en cours n’est pas terminée.',
@@ -259,7 +270,11 @@ export const fr = {
 		nothingToConfirm: 'Aucun résultat à confirmer.',
 		opponentConfirms: 'C’est à ton adversaire de confirmer.',
 		nothingToDispute: 'Aucun résultat à contester.',
-		unknownResult: 'Résultat inconnu.'
+		unknownResult: 'Résultat inconnu.',
+		badDeadline: 'Date invalide.',
+		deadlinePast: 'La date limite doit être dans le futur.',
+		noOpenWeek: 'Aucune semaine en cours.',
+		groupOver: 'La phase de groupes est terminée : plus de date limite.'
 	},
 	preview: {
 		kingTitle: '♔ {name} est le Roi de la Semaine {n}',

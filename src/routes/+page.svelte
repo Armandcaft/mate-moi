@@ -3,9 +3,10 @@
 	import { page } from '$app/state';
 	import Crown from '#lib/components/Crown.svelte';
 	import GameCard from '#lib/components/GameCard.svelte';
-	import { playerName, whatsapp } from '#lib/format.ts';
+	import { dateTime, dayWords, daysUntil, deadlineWords, playerName, whatsapp } from '#lib/format.ts';
 	import { nudgeText } from '#lib/nudge.ts';
-	import { locale, t } from '#lib/i18n/t.svelte.ts';
+	import { dateLocale, locale, t } from '#lib/i18n/t.svelte.ts';
+	import { timeZone } from '#lib/zone.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -48,6 +49,15 @@
 		return [head, '', ...lines, '', link].join('\n');
 	});
 
+	/** The group stage's deadline (none for the play-off and the final). */
+	const deadline = $derived(step?.phase === 'group' && open ? (view?.week.deadline ?? null) : null);
+	const deadlineLabel = $derived.by(() => {
+		if (!deadline) return '';
+		const when = dateTime(deadline, dateLocale(), timeZone());
+		const days = dayWords(t, daysUntil(deadline, new Date(data.now), timeZone()));
+		return `${t('week.deadline', { when })}${days ? ` · ${days}` : ''}`;
+	});
+
 	/** "Relancer": what the week is still waiting for, in the sharer's language. */
 	const nudge = $derived(
 		view && step
@@ -56,6 +66,7 @@
 					phase: step.phase,
 					games: view.games,
 					name,
+					deadline: deadline && deadlineWords(deadline, new Date(data.now), dateLocale(), timeZone()),
 					link: `${page.url.origin}/`
 				})
 			: ''
@@ -124,6 +135,10 @@
 			</div>
 		{/if}
 	</div>
+
+	{#if deadlineLabel}
+		<p class="-mt-3 mb-5 text-xs text-muted" data-deadline>{deadlineLabel}</p>
+	{/if}
 
 	{#if step?.phase === 'done'}
 		<section class="king-reveal card relative mb-5 overflow-hidden border-gold/50 px-6 py-8 text-center">
@@ -207,7 +222,7 @@
 			<h2 class="mb-3 text-xs tracking-[0.2em] text-gold uppercase">{t('week.yourMove')}</h2>
 			<div class="grid gap-3">
 				{#each todo as game (game.id)}
-					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} />
+					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} deadline={view.week.deadline} />
 				{/each}
 			</div>
 		</section>
@@ -218,7 +233,7 @@
 			<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('week.knockout')}</h2>
 			<div class="grid gap-3">
 				{#each knockout.filter((g) => !todoIds.has(g.id)) as game (game.id)}
-					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} />
+					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} deadline={view.week.deadline} />
 				{/each}
 			</div>
 		</section>
@@ -229,7 +244,7 @@
 			<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('phase.group')}</h2>
 			<div class="grid gap-3">
 				{#each groupGames.filter((g) => !todoIds.has(g.id)) as game (game.id)}
-					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} />
+					<GameCard {game} names={view.players} meId={me.id} {open} now={data.now} deadline={view.week.deadline} />
 				{/each}
 			</div>
 		</section>

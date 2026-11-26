@@ -3,14 +3,15 @@
 	import { describe, playerName, score } from '#lib/format.ts';
 	import { t } from '#lib/i18n/t.svelte.ts';
 	import type { GameRow } from '#lib/server/db/schema.ts';
-	import { AUTO_CONFIRM_MS, hoursUntil } from '#lib/tournament/clock.ts';
+	import { autoConfirmAt, hoursUntil } from '#lib/tournament/clock.ts';
 
 	let {
 		game,
 		names,
 		meId,
 		open,
-		now
+		now,
+		deadline = null
 	}: {
 		game: GameRow;
 		names: Map<number, { name: string; deletedAt: Date | null }>;
@@ -18,6 +19,8 @@
 		open: boolean;
 		/** The page's clock (from the server, so both render the same countdown). */
 		now: number;
+		/** The week's group-stage deadline: a pending group result counts then at the latest. */
+		deadline?: Date | null;
 	} = $props();
 
 	const white = $derived(playerName(t, names.get(game.whiteId)));
@@ -27,9 +30,17 @@
 	const pending = $derived(!!game.result && !confirmed);
 	const iMustConfirm = $derived(pending && mine && game.reportedById !== meId);
 	/** Hours until a pending result counts on its own (`sweep`); 0 = under an hour. */
-	const autoIn = $derived(
-		pending && game.reportedAt ? hoursUntil(game.reportedAt.getTime() + AUTO_CONFIRM_MS, now) : null
+	const autoAt = $derived(
+		pending && game.reportedAt
+			? autoConfirmAt(
+					{ id: game.id, stage: game.stage, result: game.result, reportedAt: game.reportedAt.getTime(), confirmedAt: null },
+					deadline?.getTime() ?? null
+				)
+			: null
 	);
+	const autoIn = $derived(autoAt === null ? null : hoursUntil(autoAt, now));
+	/** Not played by the deadline: nobody scores. */
+	const unplayed = $derived(confirmed && game.result === '0-0');
 	const opponent = $derived(game.whiteId === game.reportedById ? black : white);
 
 	const winnerId = $derived(
@@ -88,6 +99,8 @@
 				<button formaction="?/confirm" class="btn btn-gold" disabled={busy}>{t('game.confirm')}</button>
 			</form>
 		{/if}
+	{:else if unplayed}
+		<p class="mt-2 text-center text-[11px] text-muted italic">{t('game.notPlayed')}</p>
 	{:else if confirmed && game.autoConfirmed}
 		<p class="mt-2 text-center text-[11px] text-muted italic">{t('game.autoConfirmed')}</p>
 	{:else if open && !game.result && mine}

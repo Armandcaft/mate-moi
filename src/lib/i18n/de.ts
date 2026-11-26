@@ -71,7 +71,8 @@ export const de = {
 		whoWonArmageddon: 'Wer hat gewonnen? Remis zählt als Sieg für Schwarz.',
 		autoIn: 'Wird in {n} Std. automatisch bestätigt',
 		autoSoon: 'Wird in weniger als einer Stunde automatisch bestätigt',
-		autoConfirmed: 'automatisch bestätigt'
+		autoConfirmed: 'automatisch bestätigt',
+		notPlayed: 'nicht gespielt'
 	},
 	week: {
 		label: 'Woche {n}',
@@ -97,7 +98,11 @@ export const de = {
 		yourMove: 'Du bist dran',
 		knockout: 'Stechen und Finale',
 		shareKing: '♔ {name} ist König der Woche {n}! Wer traut sich, den Thron zu stürmen?',
-		abandoned: 'Diese Woche sind nicht mehr genug Spieler übrig: kein König. Nächste Woche geht’s weiter.'
+		abandoned: 'Diese Woche sind nicht mehr genug Spieler übrig: kein König. Nächste Woche geht’s weiter.',
+		deadline: 'Frist: {when}',
+		today: 'heute',
+		tomorrow: 'morgen',
+		inDays: 'in {n} T.'
 	},
 	nudge: {
 		button: 'Anstupsen',
@@ -246,7 +251,13 @@ export const de = {
 		transferIntro:
 			'Du bleibst Admin, aber {name} wird unantastbar: keine Admin-Rechte entziehen, nicht archivieren, nicht löschen. Tipp zur Bestätigung den Namen ein.',
 		transferConfirm: 'Übergeben',
-		transferred: '{name} ist jetzt Eigentümer der Liga.'
+		transferred: '{name} ist jetzt Eigentümer der Liga.',
+		week: 'Laufende Woche',
+		deadline: 'Frist der Gruppenphase',
+		deadlineSave: 'Frist ändern',
+		deadlineHint:
+			'Bei Fristende zählen offene Ergebnisse wie gemeldet, und ungespielte Partien enden 0 – 0 (für beide verloren, keine Punkte). Danach Stechen oder Finale, ohne Frist.',
+		deadlineSaved: 'Neue Frist: {when}.'
 	},
 	league: {
 		weekNotOver: 'Die laufende Woche ist noch nicht vorbei.',
@@ -258,7 +269,11 @@ export const de = {
 		nothingToConfirm: 'Kein Ergebnis zu bestätigen.',
 		opponentConfirms: 'Dein Gegner muss bestätigen.',
 		nothingToDispute: 'Kein Ergebnis zum Anfechten.',
-		unknownResult: 'Unbekanntes Ergebnis.'
+		unknownResult: 'Unbekanntes Ergebnis.',
+		badDeadline: 'Ungültiges Datum.',
+		deadlinePast: 'Die Frist muss in der Zukunft liegen.',
+		noOpenWeek: 'Gerade läuft keine Woche.',
+		groupOver: 'Die Gruppenphase ist vorbei: keine Frist mehr.'
 	},
 	preview: {
 		kingTitle: '♔ {name} ist König der Woche {n}',

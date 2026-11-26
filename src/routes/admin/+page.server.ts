@@ -11,7 +11,7 @@ import {
 	setArchived,
 	transferOwnership
 } from '#lib/server/admin.ts';
-import { sweep } from '#lib/server/league.ts';
+import { LeagueError, latestWeek, setDeadline, sweep, weekView } from '#lib/server/league.ts';
 import { say, translator } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 
@@ -27,7 +27,15 @@ function admin(locals: App.Locals) {
 
 export const load: PageServerLoad = ({ locals }) => {
 	const me = admin(locals);
-	return { players: allPlayers(), invites: pendingInvites(), meIsOwner: me.isOwner };
+	const week = latestWeek();
+	const view = week && !week.closedAt ? weekView(week) : null;
+	return {
+		players: allPlayers(),
+		invites: pendingInvites(),
+		meIsOwner: me.isOwner,
+		/** The open week while its group stage runs: its deadline can be moved. */
+		groupWeek: view?.step.phase === 'group' ? { number: view.week.number, deadline: view.week.deadline } : null
+	};
 };
 
 /** Run an admin action on the `player` in the form, turning refusals into a page message. */
@@ -51,6 +59,19 @@ export const actions: Actions = {
 		const me = admin(locals);
 		const { token, expiresAt } = createInvite(me.id);
 		return { inviteLink: `${url.origin}/invitation/${token}`, expiresAt };
+	},
+	/** The browser sends the chosen local time as an ISO instant (with its zone). */
+	deadline: async ({ request, locals }) => {
+		admin(locals);
+		const raw = String((await request.formData()).get('deadline') ?? '');
+		const deadline = new Date(raw);
+		try {
+			setDeadline(deadline);
+		} catch (e) {
+			if (e instanceof LeagueError) return fail(400, { message: say(locals.locale, e) });
+			throw e;
+		}
+		return { deadlineSaved: deadline };
 	},
 	revoke: async ({ request, locals }) => {
 		admin(locals);

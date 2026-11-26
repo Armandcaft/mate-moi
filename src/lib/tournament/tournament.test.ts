@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	HOUR_MS,
+	nothingDue,
 	autoConfirmAt,
 	departures,
 	dueAt,
@@ -386,18 +387,18 @@ describe('the clock: auto-confirm after 48 h', () => {
 	});
 
 	it('confirms a result nobody answered for 48 h, as of the 48th hour', () => {
-		expect(dueAt([pending(1, t0)], t0 + 48 * H)).toEqual({ confirm: [{ id: 1, at: t0 + 48 * H }] });
+		expect(dueAt([pending(1, t0)], t0 + 48 * H)).toEqual({ confirm: [{ id: 1, at: t0 + 48 * H, rule: 'clock' }], unplayed: [] });
 		expect(dueAt([pending(1, t0)], t0 + 72 * H).confirm[0].at).toBe(t0 + 48 * H);
 	});
 
 	it('waits at 47 h', () => {
-		expect(dueAt([pending(1, t0)], t0 + 47 * H)).toEqual({ confirm: [] });
-		expect(dueAt([pending(1, t0)], t0 + 48 * H - 1)).toEqual({ confirm: [] });
+		expect(dueAt([pending(1, t0)], t0 + 47 * H)).toEqual({ confirm: [], unplayed: [] });
+		expect(dueAt([pending(1, t0)], t0 + 48 * H - 1)).toEqual({ confirm: [], unplayed: [] });
 	});
 
 	it('ignores unreported and already confirmed games', () => {
 		const confirmed = { ...pending(2, t0), confirmedAt: t0 + H };
-		expect(dueAt([pending(1, null, null), confirmed], t0 + 100 * H)).toEqual({ confirm: [] });
+		expect(dueAt([pending(1, null, null), confirmed], t0 + 100 * H)).toEqual({ confirm: [], unplayed: [] });
 		expect(autoConfirmAt(confirmed)).toBeNull();
 		expect(autoConfirmAt(pending(1, null, null))).toBeNull();
 	});
@@ -409,5 +410,91 @@ describe('the clock: auto-confirm after 48 h', () => {
 		expect(hoursUntil(at, t0 + 47 * H - 60_000)).toBe(1);
 		expect(hoursUntil(at, t0 + 47 * H + 60_000)).toBe(0);
 		expect(hoursUntil(at, t0 + 50 * H)).toBe(0);
+	});
+});
+
+describe('the deadline', () => {
+	const H = HOUR_MS;
+	const t0 = Date.UTC(2026, 10, 23, 12);
+	const deadline = t0 + 100 * H;
+	const game = (id: number, extra: Partial<TimedGame> = {}): TimedGame => ({
+		id,
+		stage: 'group',
+		result: null,
+		reportedAt: null,
+		confirmedAt: null,
+		...extra
+	});
+	const week = [
+		game(1, { result: '1-0', reportedAt: deadline - 10 * H }), // pending, not 48 h old
+		game(2), // never reported
+		game(3, { result: '0-1', reportedAt: t0, confirmedAt: t0 + H }), // done
+		game(4, { result: '1-0', reportedAt: t0 }) // pending for over 48 h before the deadline
+	];
+
+	it('does nothing before it', () => {
+		const due = dueAt(week, deadline - 1, deadline);
+		expect(due.unplayed).toEqual([]);
+		expect(due.confirm).toEqual([{ id: 4, at: t0 + 48 * H, rule: 'clock' }]);
+	});
+
+	it('confirms pending results as reported, then closes the unplayed games 0-0', () => {
+		const due = dueAt(week, deadline + H, deadline);
+		expect(due.confirm).toEqual([
+			{ id: 1, at: deadline, rule: 'deadline' },
+			{ id: 4, at: t0 + 48 * H, rule: 'clock' }
+		]);
+		expect(due.unplayed).toEqual([{ id: 2, at: deadline }]);
+	});
+
+	it('leaves the play-off and the final alone', () => {
+		const ko = [game(5, { stage: 'final' }), game(6, { stage: 'playoff', result: '1-0', reportedAt: deadline })];
+		expect(nothingDue(dueAt(ko, deadline + 10 * H, deadline))).toBe(true);
+	});
+
+	it('brings the countdown forward to the deadline', () => {
+		expect(autoConfirmAt(week[0], deadline)).toBe(deadline);
+		expect(autoConfirmAt(week[3], deadline)).toBe(t0 + 48 * H);
+		expect(autoConfirmAt({ ...week[0], stage: 'final' }, deadline)).toBe(deadline + 38 * H);
+	});
+});
+
+describe('0-0: a group game not played by the deadline', () => {
+	const sched = groupSchedule(PLAYERS, 3, 1);
+
+	it('counts as played and lost by both, for no points', () => {
+		const games: Game[] = sched.map((g) => ({ ...g, result: '0-0' }));
+		for (const line of table(PLAYERS, games))
+			expect(line).toMatchObject({ played: 6, wins: 0, draws: 0, losses: 6, points: 0 });
+	});
+
+	it('scores nothing in the standings beside real results', () => {
+		// A beats everyone; B–C never played.
+		const games: Game[] = sched.map((g) =>
+			g.whiteId === A || g.blackId === A ? { ...g, result: beats(g, A) } : { ...g, result: '0-0' }
+		);
+		const lines = new Map(table(PLAYERS, games).map((l) => [l.playerId, l]));
+		expect(lines.get(A)).toMatchObject({ played: 6, wins: 6, points: 18 });
+		expect(lines.get(B)).toMatchObject({ played: 6, wins: 0, losses: 6, points: 0 });
+		expect(lines.get(C)).toMatchObject({ played: 6, wins: 0, losses: 6, points: 0 });
+	});
+
+	it('counts as 0 each in head-to-head between tied players', () => {
+		// A beats everyone. B and C each lost all to A; between them: one win each and one 0-0.
+		// B and C tie on 3 points, on head-to-head (3-3), and on wins (1-1): a play-off follows.
+		let bc = 0;
+		const games: Game[] = sched.map((g) => {
+			if (g.whiteId === A || g.blackId === A) return { ...g, result: beats(g, A) };
+			bc++;
+			return { ...g, result: bc === 1 ? beats(g, B) : bc === 2 ? beats(g, C) : '0-0' };
+		});
+		expect(rank(PLAYERS, games)).toEqual([[A], [B, C]]);
+		expect(nextStep(PLAYERS, games)).toMatchObject({ phase: 'playoff', contenders: [B, C] });
+	});
+
+	it('finishes the group stage like any result', () => {
+		const games: Game[] = sched.map((g) => ({ ...g, result: '0-0' }));
+		// Nobody scored: all three level, an Armageddon play-off among them.
+		expect(nextStep(PLAYERS, games)).toMatchObject({ phase: 'playoff', contenders: [A, B, C] });
 	});
 });

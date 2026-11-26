@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { whatsapp } from '#lib/format.ts';
+	import { dateTime, localInput, whatsapp } from '#lib/format.ts';
+	import { timeZone } from '#lib/zone.svelte.ts';
 	import { dateLocale, t } from '#lib/i18n/t.svelte.ts';
 	import type { PageProps } from './$types';
 
@@ -44,8 +45,51 @@
 	<p class="card mb-4 border-loss/60 px-4 py-3 text-sm text-danger" role="alert">{form.message}</p>
 {:else if form?.deleted}
 	<p class="card mb-4 px-4 py-3 text-sm text-silver" role="status">{t('admin.deleted', { name: String(form.deleted) })}</p>
+{:else if form?.deadlineSaved}
+	<p class="card mb-4 border-gold/50 px-4 py-3 text-sm text-silver" role="status">
+		{t('admin.deadlineSaved', { when: dateTime(new Date(form.deadlineSaved as Date), dateLocale(), timeZone()) })}
+	</p>
 {:else if form?.transferred}
 	<p class="card mb-4 border-gold/50 px-4 py-3 text-sm text-silver" role="status">{t('admin.transferred', { name: String(form.transferred) })}</p>
+{/if}
+
+<!-- The week's deadline (group stage only) -->
+{#if data.groupWeek}
+	<section class="mb-8">
+		<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">
+			{t('admin.week')} · {t('week.label', { n: data.groupWeek.number })}
+		</h2>
+		<form
+			method="POST"
+			action="?/deadline"
+			class="card grid gap-2 p-4"
+			use:enhance={({ formData }) => {
+				// The input is in the admin's own time: send the instant, zone included.
+				const local = String(formData.get('deadline') ?? '');
+				if (local) formData.set('deadline', new Date(local).toISOString());
+				return async ({ update }) => update({ reset: false });
+			}}
+		>
+			{#if data.groupWeek.deadline}
+				<p class="text-sm text-silver" data-deadline>
+					{t('week.deadline', { when: dateTime(data.groupWeek.deadline, dateLocale(), timeZone()) })}
+				</p>
+			{/if}
+			<label class="block">
+				<span class="mb-1 block text-xs text-muted">{t('admin.deadline')}</span>
+				<input
+					type="datetime-local"
+					name="deadline"
+					required
+					value={data.groupWeek.deadline ? localInput(data.groupWeek.deadline, timeZone()) : ''}
+					min={localInput(new Date(), timeZone())}
+					class="w-full min-w-0 rounded-xl border border-line bg-surface px-3 py-2 text-silver outline-none focus:border-gold"
+				/>
+			</label>
+			<button class="btn btn-ghost text-xs">{t('admin.deadlineSave')}</button>
+			<p class="text-xs text-muted">{t('admin.deadlineHint')}</p>
+		</form>
+	</section>
 {/if}
 
 <!-- Invitations -->

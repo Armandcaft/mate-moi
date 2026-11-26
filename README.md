@@ -47,6 +47,7 @@
 | 📲 **WhatsApp previews** | the share link unfurls into a standings card, King and motto included |
 | ✉️ **Invite links** | one-time, 48 h; newcomers pick their own name and code, and can join mid-week |
 | 🙋 **Profiles** | change your name, your motto (60 characters), your code; delete your account (your games stay, as “Deleted player”) |
+| 📅 **Week deadline** | the group stage closes after 7 days (admins can move it); unplayed games end 0 – 0, lost by both, and the final goes ahead |
 | ⏱️ **Auto-confirm** | a result nobody confirms or disputes for 48 h counts; the card counts the hours down |
 | 🚪 **Leaving mid-week** | an archived or deleted player's group games are dropped, or their play-off and final games forfeited, so the week still crowns a King |
 | 🛡️ **Admin tab** | invites, temporary codes, archiving, deletion, promotion, one-click backup |
@@ -65,6 +66,9 @@
   Only the tie that decides a place in the final is played off.
 - **Final**: the better-ranked player has White. A draw sends it to Armageddon, where the
   better-ranked player has Black, and with it the draw odds.
+- **Deadline**: the group stage ends seven days after the week starts (admins can move it). Then
+  pending results count as reported, and games nobody played end **0 – 0**: a loss for both, no
+  points. The play-off and the final have no deadline.
 - **Joining mid-week**: during the group stage, the newcomer's games against everyone are added
   (as many as each pair plays that week), so the round-robin stays even and the final waits for
   them. During a play-off or the final, they start the next week.

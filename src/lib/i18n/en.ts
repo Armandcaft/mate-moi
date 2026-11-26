@@ -71,7 +71,8 @@ export const en = {
 		whoWonArmageddon: 'Who won? A draw counts as a win for Black.',
 		autoIn: 'Confirmed automatically in {n} h',
 		autoSoon: 'Confirmed automatically in under an hour',
-		autoConfirmed: 'confirmed automatically'
+		autoConfirmed: 'confirmed automatically',
+		notPlayed: 'not played'
 	},
 	week: {
 		label: 'Week {n}',
@@ -96,7 +97,11 @@ export const en = {
 		yourMove: 'Your move',
 		knockout: 'Play-off and final',
 		shareKing: '♔ {name} is King of the Week {n}! Who dares to dethrone them?',
-		abandoned: 'Not enough players left this week: no king. Same time next week.'
+		abandoned: 'Not enough players left this week: no king. Same time next week.',
+		deadline: 'Deadline: {when}',
+		today: 'today',
+		tomorrow: 'tomorrow',
+		inDays: 'in {n} d'
 	},
 	nudge: {
 		button: 'Nudge',
@@ -244,7 +249,13 @@ export const en = {
 		transferIntro:
 			'You stay an admin, but {name} becomes the untouchable one: can’t be removed as admin, archived or deleted. Type their name to confirm.',
 		transferConfirm: 'Transfer',
-		transferred: '{name} now owns the league.'
+		transferred: '{name} now owns the league.',
+		week: 'This week',
+		deadline: 'Group stage deadline',
+		deadlineSave: 'Change the deadline',
+		deadlineHint:
+			'At the deadline, pending results count as reported and unplayed games end 0 – 0 (lost by both, no points). Then the play-off or the final, with no deadline.',
+		deadlineSaved: 'New deadline: {when}.'
 	},
 	league: {
 		weekNotOver: 'This week isn’t over yet.',
@@ -256,7 +267,11 @@ export const en = {
 		nothingToConfirm: 'No result to confirm.',
 		opponentConfirms: 'It’s up to your opponent to confirm.',
 		nothingToDispute: 'No result to dispute.',
-		unknownResult: 'Unknown result.'
+		unknownResult: 'Unknown result.',
+		badDeadline: 'Invalid date.',
+		deadlinePast: 'The deadline must be in the future.',
+		noOpenWeek: 'No week is running.',
+		groupOver: 'The group stage is over: no deadline any more.'
 	},
 	preview: {
 		kingTitle: '♔ {name} is King of the Week {n}',

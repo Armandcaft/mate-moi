@@ -1,5 +1,10 @@
 /** A game's result, from White's point of view. */
-export type Result = '1-0' | '0-1' | '1/2-1/2';
+export type Result = '1-0' | '0-1' | '1/2-1/2' | '0-0';
+/**
+ * `0-0`: a group game nobody played before the week's deadline, closed as a double forfeit.
+ * Nobody scores: it counts as played and as a loss for both. Never reported by a player.
+ */
+export const REPORTABLE: readonly Result[] = ['1-0', '0-1', '1/2-1/2'];
 
 /**
  * - `group`: the round-robin everyone plays.

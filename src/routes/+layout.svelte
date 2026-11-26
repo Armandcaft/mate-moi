@@ -1,11 +1,15 @@
 <script lang="ts">
 	import '../app.css';
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
+	import { markHydrated } from '#lib/zone.svelte.ts';
 	import Crown from '#lib/components/Crown.svelte';
 	import { t } from '#lib/i18n/t.svelte.ts';
 	import type { LayoutProps } from './$types';
 
 	let { children, data }: LayoutProps = $props();
+
+	onMount(markHydrated);
 
 	const nav = $derived([
 		{ href: '/', label: t('nav.week') },

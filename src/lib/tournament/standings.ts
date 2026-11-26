@@ -10,11 +10,15 @@ export interface Line {
 	points: number;
 }
 
-/** `1` if `playerId` won, `0.5` for a draw, `0` for a loss; `null` if they didn't play it or it has no result. */
+/**
+ * `1` if `playerId` won, `0.5` for a draw, `0` for a loss (a `0-0` double forfeit is a loss for
+ * both); `null` if they didn't play it or it has no result.
+ */
 export function scoreFor(game: Pick<Game, 'whiteId' | 'blackId' | 'result'>, playerId: PlayerId) {
 	if (!game.result) return null;
 	if (game.whiteId !== playerId && game.blackId !== playerId) return null;
 	if (game.result === '1/2-1/2') return 0.5;
+	if (game.result === '0-0') return 0;
 	const whiteWon = game.result === '1-0';
 	return whiteWon === (game.whiteId === playerId) ? 1 : 0;
 }

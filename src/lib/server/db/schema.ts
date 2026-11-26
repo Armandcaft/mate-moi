@@ -71,6 +71,11 @@ export const weeks = sqliteTable('weeks', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	number: integer('number').notNull().unique(),
 	kingId: integer('king_id').references(() => players.id),
+	/**
+	 * The group stage ends here (start + 7 days, admins may move it): pending results count as
+	 * reported, unplayed group games are closed `0-0` (`sweep`). Play-off and final have none.
+	 */
+	deadline: integer('deadline', { mode: 'timestamp' }),
 	closedAt: integer('closed_at', { mode: 'timestamp' }),
 	createdAt: createdAt()
 });
@@ -92,7 +97,7 @@ export const games = sqliteTable(
 			.references(() => players.id),
 		armageddon: integer('armageddon', { mode: 'boolean' }).notNull().default(false),
 		/** As reported; it only counts once the opponent has confirmed it (`confirmedAt`). */
-		result: text('result', { enum: ['1-0', '0-1', '1/2-1/2'] }),
+		result: text('result', { enum: ['1-0', '0-1', '1/2-1/2', '0-0'] }),
 		reportedById: integer('reported_by_id').references(() => players.id),
 		reportedAt: integer('reported_at', { mode: 'timestamp' }),
 		confirmedAt: integer('confirmed_at', { mode: 'timestamp' }),

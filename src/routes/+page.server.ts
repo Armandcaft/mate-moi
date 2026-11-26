@@ -11,7 +11,7 @@ import {
 } from '#lib/server/league.ts';
 import { say, type Locale } from '#lib/i18n/index.ts';
 import { shareKey } from '#lib/server/og.ts';
-import type { Result } from '#lib/tournament/types.ts';
+import { REPORTABLE, type Result } from '#lib/tournament/types.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {
@@ -22,7 +22,8 @@ export const load: PageServerLoad = () => {
 	return { view, shareKey: shareKey(view), now: Date.now() };
 };
 
-const RESULTS: Result[] = ['1-0', '0-1', '1/2-1/2'];
+/** What a player may report: never `0-0`, which only the deadline sets. */
+const RESULTS = REPORTABLE;
 
 /** Run a league write, turning its refusals into a form error the page shows. */
 function attempt(locale: Locale, fn: () => void) {

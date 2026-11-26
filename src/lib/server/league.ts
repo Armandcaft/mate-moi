@@ -1,5 +1,7 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import {
+	REPORTABLE,
+	WEEK_MS,
 	departures,
 	dueAt,
 	gamesPerPairFor,
@@ -7,6 +9,7 @@ import {
 	groupSchedule,
 	joinerSchedule,
 	nextStep,
+	nothingDue,
 	rank,
 	table,
 	type Game,
@@ -146,6 +149,10 @@ export function hall(): Hall {
 		if (g.result === '1/2-1/2') {
 			bump(g.whiteId, g.blackId, 'd');
 			bump(g.blackId, g.whiteId, 'd');
+		} else if (g.result === '0-0') {
+			// Not played by the deadline: a loss for both.
+			bump(g.whiteId, g.blackId, 'l');
+			bump(g.blackId, g.whiteId, 'l');
 		} else {
 			const [w, l] = g.result === '1-0' ? [g.whiteId, g.blackId] : [g.blackId, g.whiteId];
 			bump(w, l, 'w');
@@ -168,7 +175,8 @@ export function startWeek(): Week {
 
 		const last = tx.select().from(weeks).orderBy(desc(weeks.number)).limit(1).get();
 		const number = (last?.number ?? 0) + 1;
-		const week = tx.insert(weeks).values({ number }).returning().get();
+		const deadline = new Date(Date.now() + WEEK_MS);
+		const week = tx.insert(weeks).values({ number, deadline }).returning().get();
 
 		const schedule = groupSchedule(
 			ids.map((p) => p.id),
@@ -197,6 +205,7 @@ function loadForUpdate(tx: Tx, gameId: number, playerId: number) {
 export function reportResult(gameId: number, playerId: number, result: Result) {
 	db.transaction((tx) => {
 		const game = loadForUpdate(tx, gameId, playerId);
+		if (!REPORTABLE.includes(result)) throw new LeagueError('league.unknownResult');
 		if (game.armageddon && result === '1/2-1/2')
 			throw new LeagueError('league.armageddonDraw');
 		tx.update(games)
@@ -303,7 +312,9 @@ const timed = (g: GameRow): TimedGame => ({
 
 /**
  * Apply every rule that time has made due, then move the week on: a result nobody answered for
- * 48 h counts as reported.
+ * 48 h counts as reported; once the group stage's deadline has passed, its pending results count
+ * as reported and its unplayed games are closed `0-0` (nobody scores), so the play-off or the
+ * final can be created.
  *
  * The server sleeps when idle (Fly.io stops the machine), so no timer could be trusted to fire:
  * instead every page and action that reads or writes the week calls this first, and the rules
@@ -313,24 +324,51 @@ const timed = (g: GameRow): TimedGame => ({
 export function sweep(now = new Date()) {
 	db.transaction((tx) => {
 		const rows = tx
-			.select({ game: games })
+			.select({ game: games, deadline: weeks.deadline })
 			.from(games)
 			.innerJoin(weeks, eq(weeks.id, games.weekId))
 			.where(and(isNull(weeks.closedAt), isNull(games.confirmedAt)))
-			.all()
-			.map((r) => r.game);
-		const due = dueAt(rows.map(timed), now.getTime());
-		if (!due.confirm.length) return;
+			.all();
 
-		const weekIds = new Set<number>();
-		for (const { id, at } of due.confirm) {
-			tx.update(games)
-				.set({ confirmedAt: new Date(at), autoConfirmed: true })
-				.where(and(eq(games.id, id), isNull(games.confirmedAt)))
-				.run();
-			weekIds.add(rows.find((g) => g.id === id)!.weekId);
+		const byWeek = new Map<number, { deadline: Date | null; games: GameRow[] }>();
+		for (const { game, deadline } of rows) {
+			const week = byWeek.get(game.weekId) ?? { deadline, games: [] };
+			week.games.push(game);
+			byWeek.set(game.weekId, week);
 		}
-		for (const weekId of weekIds) advance(tx, weekId);
+
+		for (const [weekId, week] of byWeek) {
+			const due = dueAt(week.games.map(timed), now.getTime(), ms(week.deadline));
+			if (nothingDue(due)) continue;
+			for (const { id, at } of due.confirm)
+				tx.update(games)
+					.set({ confirmedAt: new Date(at), autoConfirmed: true })
+					.where(and(eq(games.id, id), isNull(games.confirmedAt)))
+					.run();
+			for (const { id, at } of due.unplayed)
+				tx.update(games)
+					.set({ result: '0-0', reportedById: null, reportedAt: new Date(at), confirmedAt: new Date(at) })
+					.where(and(eq(games.id, id), isNull(games.confirmedAt)))
+					.run();
+			advance(tx, weekId);
+		}
+	});
+}
+
+/**
+ * An admin moves the open week's deadline. Only during the group stage (the play-off and the
+ * final have none), and never into the past.
+ */
+export function setDeadline(deadline: Date, now = new Date()) {
+	if (Number.isNaN(deadline.getTime())) throw new LeagueError('league.badDeadline');
+	if (deadline.getTime() <= now.getTime()) throw new LeagueError('league.deadlinePast');
+	db.transaction((tx) => {
+		const week = tx.select().from(weeks).where(isNull(weeks.closedAt)).get();
+		if (!week) throw new LeagueError('league.noOpenWeek');
+		const rows = weekGames(tx, week.id);
+		if (nextStep(weekPlayerIds(rows), rows.map(toGame)).phase !== 'group')
+			throw new LeagueError('league.groupOver');
+		tx.update(weeks).set({ deadline }).where(eq(weeks.id, week.id)).run();
 	});
 }
 
