@@ -104,7 +104,7 @@ export function acceptInvite(
 
 export type PlayerSummary = Pick<
 	Player,
-	'id' | 'name' | 'active' | 'isAdmin' | 'mustChangePin' | 'lockedUntil'
+	'id' | 'name' | 'active' | 'isAdmin' | 'isOwner' | 'mustChangePin' | 'lockedUntil'
 >;
 
 export function allPlayers(): PlayerSummary[] {
@@ -114,6 +114,7 @@ export function allPlayers(): PlayerSummary[] {
 			name: players.name,
 			active: players.active,
 			isAdmin: players.isAdmin,
+			isOwner: players.isOwner,
 			mustChangePin: players.mustChangePin,
 			lockedUntil: players.lockedUntil
 		})
@@ -178,10 +179,40 @@ export function deletePlayer(actorId: number, playerId: number, typedName: strin
 
 export function setAdmin(actorId: number, playerId: number, isAdmin: boolean) {
 	guardOther(actorId, playerId);
-	db.update(players)
-		.set({ isAdmin })
-		.where(and(eq(players.id, playerId), ne(players.id, actorId)))
-		.run();
+	db.transaction((tx) => {
+		const p = tx.select({ isOwner: players.isOwner }).from(players).where(eq(players.id, playerId)).get();
+		// The owner is always an admin.
+		if (p?.isOwner && !isAdmin) throw new AdminError('admin.ownerProtected');
+		tx.update(players)
+			.set({ isAdmin })
+			.where(and(eq(players.id, playerId), ne(players.id, actorId), isNull(players.deletedAt)))
+			.run();
+	});
+}
+
+/**
+ * The owner hands the league on to another active admin, who becomes owner; the old owner stays
+ * an admin. As for a deletion, the owner types the new owner's exact name. Only the owner may.
+ * Returns the new owner's name, for the confirmation message.
+ */
+export function transferOwnership(actorId: number, playerId: number, typedName: string): string {
+	guardOther(actorId, playerId);
+	return db.transaction((tx) => {
+		const me = tx.select({ isOwner: players.isOwner }).from(players).where(eq(players.id, actorId)).get();
+		if (!me?.isOwner) throw new AdminError('admin.ownerOnly');
+		const heir = tx
+			.select({ name: players.name, isAdmin: players.isAdmin, active: players.active })
+			.from(players)
+			.where(and(eq(players.id, playerId), isNull(players.deletedAt)))
+			.get();
+		if (!heir) throw new AdminError('admin.playerNotFound');
+		if (!heir.isAdmin || !heir.active) throw new AdminError('admin.transferToAdmin');
+		if (typedName.trim() !== heir.name) throw new AdminError('admin.deleteNameMismatch');
+		// Cleared first: the unique index allows one owner at a time.
+		tx.update(players).set({ isOwner: false }).where(eq(players.id, actorId)).run();
+		tx.update(players).set({ isOwner: true, isAdmin: true }).where(eq(players.id, playerId)).run();
+		return heir.name;
+	});
 }
 
 // ── Backups ─────────────────────────────────────────────────────────────────────

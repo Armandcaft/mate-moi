@@ -10,7 +10,10 @@
 //   npm run player -- delete Frank       (name, code, motto gone; games kept as "deleted player")
 //   npm run player -- promote Frank      (admin: invites, codes, backups at /admin)
 //   npm run player -- demote Frank
+//   npm run player -- owner Frank        (the league's owner: also admin; nobody can demote,
+//                                         archive or delete them in the app; replaces the old one)
 //
+// The owner cannot be demoted, archived or deleted here either: make someone else owner first.
 // `deactivate` and `delete` refuse a player who is in the open week: taking them out of it means
 // dropping or forfeiting their games and moving the week on, which is the league engine's job
 // (`advance` in src/lib/server/league.ts), not something to copy here. Use the Admin tab then.
@@ -67,6 +70,12 @@ function playerId(n: string): number {
 	return row.id;
 }
 
+/** The owner is always an admin, active and present: ownership moves on first (`owner <other>`). */
+function refuseIfOwner(id: number, n: string) {
+	const row = sqlite.prepare('SELECT is_owner FROM players WHERE id = ?').get(id) as { is_owner: number };
+	if (row.is_owner) fail(`${n} owns the league. Make someone else owner first: player owner <name>.`);
+}
+
 /** See the comment at the top: the Admin tab settles a leaver's games in the open week. */
 function refuseIfInOpenWeek(id: number, n: string) {
 	const playing = sqlite
@@ -113,7 +122,10 @@ switch (command) {
 	case 'deactivate': {
 		const n = requireName(name);
 		const id = playerId(n);
-		if (command === 'deactivate') refuseIfInOpenWeek(id, n);
+		if (command === 'deactivate') {
+			refuseIfOwner(id, n);
+			refuseIfInOpenWeek(id, n);
+		}
 		sqlite.prepare('UPDATE players SET active = ? WHERE id = ?').run(command === 'activate' ? 1 : 0, id);
 		console.log(`${n} ${command === 'activate' ? 'restored' : 'archived'}.`);
 		break;
@@ -122,6 +134,7 @@ switch (command) {
 		// The same as deleteAccount in src/lib/server/accounts.ts.
 		const n = requireName(name);
 		const id = playerId(n);
+		refuseIfOwner(id, n);
 		refuseIfInOpenWeek(id, n);
 		const erased = sqlite.transaction(() => {
 			sqlite.prepare('DELETE FROM sessions WHERE player_id = ?').run(id);
@@ -148,24 +161,44 @@ switch (command) {
 	case 'promote':
 	case 'demote': {
 		const n = requireName(name);
-		changed(sqlite.prepare('UPDATE players SET is_admin = ? WHERE name = ?').run(command === 'promote' ? 1 : 0, n), n);
+		const id = playerId(n);
+		if (command === 'demote') refuseIfOwner(id, n);
+		sqlite.prepare('UPDATE players SET is_admin = ? WHERE id = ?').run(command === 'promote' ? 1 : 0, id);
 		console.log(`${n} is ${command === 'promote' ? 'now an admin' : 'no longer an admin'}.`);
+		break;
+	}
+	case 'owner': {
+		const n = requireName(name);
+		const row = sqlite.prepare('SELECT id, active FROM players WHERE name = ? AND deleted_at IS NULL').get(n) as
+			| { id: number; active: number }
+			| undefined;
+		if (!row) fail(`No player called "${n}".`);
+		if (!row.active) fail(`${n} is archived. Restore them first: player activate ${n}.`);
+		sqlite.transaction(() => {
+			// One owner at a time (a unique index says so too): the old one stays an admin.
+			sqlite.prepare('UPDATE players SET is_owner = 0 WHERE is_owner = 1').run();
+			sqlite.prepare('UPDATE players SET is_owner = 1, is_admin = 1 WHERE id = ?').run(row.id);
+		})();
+		console.log(`${n} now owns the league (and is an admin).`);
 		break;
 	}
 	case 'list': {
 		const rows = sqlite
-			.prepare('SELECT id, name, active, is_admin FROM players WHERE deleted_at IS NULL ORDER BY name')
+			.prepare('SELECT id, name, active, is_admin, is_owner FROM players WHERE deleted_at IS NULL ORDER BY name')
 			.all() as {
 			id: number;
 			name: string;
 			active: number;
 			is_admin: number;
+			is_owner: number;
 		}[];
 		for (const r of rows)
-			console.log(`${r.id}\t${r.name}${r.is_admin ? '\t(admin)' : ''}${r.active ? '' : '\t(archived)'}`);
+			console.log(
+				`${r.id}\t${r.name}${r.is_owner ? '\t(owner)' : r.is_admin ? '\t(admin)' : ''}${r.active ? '' : '\t(archived)'}`
+			);
 		if (!rows.length) console.log('No players yet.');
 		break;
 	}
 	default:
-		fail('Usage: player add|pin <name> <pin> · player activate|deactivate|delete|promote|demote <name> · player list');
+		fail('Usage: player add|pin <name> <pin> · player activate|deactivate|delete|promote|demote|owner <name> · player list');
 }

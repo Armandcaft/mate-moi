@@ -33,6 +33,11 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   load) and answers 404. `/invitation/[token]` is public: the one-time token is the authorization.
   A newcomer joins the running week only during its group stage (`joinCurrentWeek`, adding
   `joinerSchedule`'s games so the week stays a full round-robin); after that, the next week.
+- **Owner** (`players.is_owner`, a partial unique index allows one): set only from the CLI
+  (`player owner <name>`, which also makes them admin). Always an admin; nobody demotes, archives
+  or deletes them, in the app (`setAdmin`, `refuseOwner` in `accounts.ts`, buttons hidden) or the
+  CLI; they cannot delete themselves. They hand it on with *transfer* (`transferOwnership`) to
+  another active admin. They may still get a temporary code.
 - Leaving: **archive** = `active` false (reversible); **delete** (`src/lib/server/accounts.ts`) =
   `deleted_at`, name `~deleted-<id>`, code unusable, sessions and unused invites gone, games kept and
   shown as « Joueur supprimé » via `playerName` (`format.ts`); a player with no game is removed

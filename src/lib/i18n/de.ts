@@ -180,7 +180,8 @@ export const de = {
 			'Spielst du in der laufenden Woche mit, bist du raus: in der Gruppenphase werden deine Partien entfernt, im Stechen oder Finale verlierst du deine kampflos.',
 		deleteCode: 'Dein Code, zur Bestätigung',
 		deleteConfirm: 'Endgültig löschen',
-		lastAdmin: 'Du bist der letzte Admin. Mach zuerst jemand anderen zum Admin.'
+		lastAdmin: 'Du bist der letzte Admin. Mach zuerst jemand anderen zum Admin.',
+		owner: 'Dir gehört die Liga: Übergib sie zuerst an einen anderen Admin (Tab Admin).'
 	},
 	admin: {
 		title: 'Admin',
@@ -223,7 +224,17 @@ export const de = {
 		backupHint:
 			'Eine Datei: Spieler, Partien, Könige. Privat aufbewahren. Wiederherstellen oder Server wechseln: siehe README.',
 		playerNotFound: 'Spieler nicht gefunden.',
-		notYourself: 'Nicht bei deinem eigenen Konto.'
+		notYourself: 'Nicht bei deinem eigenen Konto.',
+		badgeOwner: 'Eigentümer',
+		ownerProtected: 'Dem Eigentümer der Liga kann man weder die Admin-Rechte entziehen noch ihn archivieren oder löschen.',
+		ownerOnly: 'Nur der Eigentümer kann die Liga übergeben.',
+		transferToAdmin: 'Die Liga kann nur an einen anderen aktiven Admin übergeben werden.',
+		transfer: 'Liga übergeben',
+		transferTitle: '{name} zum Eigentümer machen?',
+		transferIntro:
+			'Du bleibst Admin, aber {name} wird unantastbar: keine Admin-Rechte entziehen, nicht archivieren, nicht löschen. Tipp zur Bestätigung den Namen ein.',
+		transferConfirm: 'Übergeben',
+		transferred: '{name} ist jetzt Eigentümer der Liga.'
 	},
 	league: {
 		weekNotOver: 'Die laufende Woche ist noch nicht vorbei.',

@@ -8,7 +8,8 @@ import {
 	revokeInvite,
 	deletePlayer,
 	setAdmin,
-	setArchived
+	setArchived,
+	transferOwnership
 } from '#lib/server/admin.ts';
 import { say, translator } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
@@ -20,8 +21,8 @@ function admin(locals: App.Locals) {
 }
 
 export const load: PageServerLoad = ({ locals }) => {
-	admin(locals);
-	return { players: allPlayers(), invites: pendingInvites() };
+	const me = admin(locals);
+	return { players: allPlayers(), invites: pendingInvites(), meIsOwner: me.isOwner };
 };
 
 /** Run an admin action on the `player` in the form, turning refusals into a page message. */
@@ -59,6 +60,10 @@ export const actions: Actions = {
 	unarchive: (e) => onPlayer(e, (me, id) => setArchived(me, id, false)),
 	delete: (e) =>
 		onPlayer(e, (me, id, form) => ({ deleted: deletePlayer(me, id, String(form.get('name') ?? '')) })),
+	transfer: (e) =>
+		onPlayer(e, (me, id, form) => ({
+			transferred: transferOwnership(me, id, String(form.get('name') ?? ''))
+		})),
 	promote: (e) => onPlayer(e, (me, id) => setAdmin(me, id, true)),
 	demote: (e) => onPlayer(e, (me, id) => setAdmin(me, id, false))
 };

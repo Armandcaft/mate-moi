@@ -1,37 +1,49 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 const createdAt = () =>
 	integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`);
 
-export const players = sqliteTable('players', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	name: text('name').notNull().unique(),
-	/** `salt:hash`, scrypt — see `pin.ts`. */
-	pinHash: text('pin_hash').notNull(),
-	/** Inactive players keep their history but are left out of new weeks. */
-	active: integer('active', { mode: 'boolean' }).notNull().default(true),
-	/**
-	 * A code set from the CLI is temporary: the player must choose their own before
-	 * anything else. Defaults to true so existing players are asked once after this lands.
-	 */
-	mustChangePin: integer('must_change_pin', { mode: 'boolean' }).notNull().default(true),
-	/** Wrong codes in a row; reset on success. Stored so a restart does not forgive them. */
-	failedLogins: integer('failed_logins').notNull().default(0),
-	lockedUntil: integer('locked_until', { mode: 'timestamp' }),
-	/** Admins invite players, reset codes, and download backups (`/admin`). */
-	isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
-	/** A short motto the player writes (≤ 60 characters), shown when they are crowned. */
-	slogan: text('slogan'),
-	/**
-	 * The player deleted their account (or an admin did): name, code and slogan are gone, the
-	 * games stay, shown as "deleted player". Also inactive. See `accounts.ts`.
-	 */
-	deletedAt: integer('deleted_at', { mode: 'timestamp' }),
-	createdAt: createdAt()
-});
+export const players = sqliteTable(
+	'players',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		name: text('name').notNull().unique(),
+		/** `salt:hash`, scrypt — see `pin.ts`. */
+		pinHash: text('pin_hash').notNull(),
+		/** Inactive players keep their history but are left out of new weeks. */
+		active: integer('active', { mode: 'boolean' }).notNull().default(true),
+		/**
+		 * A code set from the CLI is temporary: the player must choose their own before
+		 * anything else. Defaults to true so existing players are asked once after this lands.
+		 */
+		mustChangePin: integer('must_change_pin', { mode: 'boolean' }).notNull().default(true),
+		/** Wrong codes in a row; reset on success. Stored so a restart does not forgive them. */
+		failedLogins: integer('failed_logins').notNull().default(0),
+		lockedUntil: integer('locked_until', { mode: 'timestamp' }),
+		/** Admins invite players, reset codes, and download backups (`/admin`). */
+		isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+		/** A short motto the player writes (≤ 60 characters), shown when they are crowned. */
+		slogan: text('slogan'),
+		/**
+		 * The player deleted their account (or an admin did): name, code and slogan are gone, the
+		 * games stay, shown as "deleted player". Also inactive. See `accounts.ts`.
+		 */
+		deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+		/**
+		 * The league's owner (at most one, set from the CLI: `player owner <name>`). Always an admin;
+		 * nobody can demote, archive or delete them from the app. They hand it on with "transfer".
+		 */
+		isOwner: integer('is_owner', { mode: 'boolean' }).notNull().default(false),
+		createdAt: createdAt()
+	},
+	(t) => [
+		// At most one owner: the database refuses a second one.
+		uniqueIndex('players_one_owner').on(t.isOwner).where(sql`${t.isOwner} = 1`)
+	]
+);
 
 /** A one-time link that lets a newcomer create their own player. */
 export const invites = sqliteTable('invites', {

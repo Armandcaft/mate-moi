@@ -179,7 +179,8 @@ export const en = {
 			'If you’re playing this week, you leave it: in the group stage your games are removed, in a play-off or the final you lose yours by forfeit.',
 		deleteCode: 'Your code, to confirm',
 		deleteConfirm: 'Delete for good',
-		lastAdmin: 'You’re the last admin. Make someone else an admin first.'
+		lastAdmin: 'You’re the last admin. Make someone else an admin first.',
+		owner: 'You own the league: transfer ownership to another admin first (Admin tab).'
 	},
 	admin: {
 		title: 'Admin',
@@ -221,7 +222,17 @@ export const en = {
 		download: 'Download the whole league (.db)',
 		backupHint: 'One file: players, games, kings. Keep it private. To restore it or move servers, see the README.',
 		playerNotFound: 'Player not found.',
-		notYourself: 'Not on your own account.'
+		notYourself: 'Not on your own account.',
+		badgeOwner: 'Owner',
+		ownerProtected: 'The league’s owner can’t be removed as admin, archived or deleted.',
+		ownerOnly: 'Only the owner can transfer ownership.',
+		transferToAdmin: 'Ownership can only go to another active admin.',
+		transfer: 'Transfer ownership',
+		transferTitle: 'Make {name} the owner?',
+		transferIntro:
+			'You stay an admin, but {name} becomes the untouchable one: can’t be removed as admin, archived or deleted. Type their name to confirm.',
+		transferConfirm: 'Transfer',
+		transferred: '{name} now owns the league.'
 	},
 	league: {
 		weekNotOver: 'This week isn’t over yet.',

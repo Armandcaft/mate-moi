@@ -50,6 +50,8 @@ export const actions: Actions = {
 			if (locked) return refuse(429, say(locals.locale, lockMessage(locked)));
 			return refuse(400, say(locals.locale, { key: 'login.wrongCode' }));
 		}
+		// The owner hands the league on first (Admin tab → transfer ownership).
+		if (me.isOwner) return refuse(400, say(locals.locale, { key: 'profile.owner' }));
 		// Someone must still be able to invite, reset codes and download backups.
 		if (isLastAdmin(me.id)) return refuse(400, say(locals.locale, { key: 'profile.lastAdmin' }));
 

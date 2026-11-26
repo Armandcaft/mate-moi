@@ -47,6 +47,7 @@
 | 🙋 **Profiles** | change your name, your motto (60 characters), your code; delete your account (your games stay, as “Deleted player”) |
 | 🚪 **Leaving mid-week** | an archived or deleted player's group games are dropped, or their play-off and final games forfeited, so the week still crowns a King |
 | 🛡️ **Admin tab** | invites, temporary codes, archiving, deletion, promotion, one-click backup |
+| 👑 **One owner** | set from the command line; nobody can demote, archive or delete them; they hand the league on from the Admin tab |
 | 🌍 **Three languages** | French (default), English, German; follows the phone, switchable anytime |
 | 🌗 **Light & dark** | black-and-gold or ivory board; follows the phone, or pick one on your profile |
 | 🔐 **Locked down** | peppered scrypt codes, lockout after 5 tries; only login, invitations and link previews are public |
@@ -92,6 +93,7 @@ Locally: `npm run player -- <command>`. On Fly.io:
 | `add <name> <code>` | new player with a **temporary** code (6 to 8 digits); they choose their own at first login |
 | `pin <name> <code>` | forgotten code: a new temporary one, also lifts a lockout |
 | `promote <name>` · `demote <name>` | give or remove the admin tab |
+| `owner <name>` | make them the league's **owner** (and an admin), replacing the previous one; the owner can't be demoted, archived or deleted, here or in the app |
 | `deactivate <name>` · `activate <name>` | archive (sign out, bench, history kept) or restore a player; refused while they play the current week (use the Admin tab) |
 | `delete <name>` | delete an account: name, code and motto gone, games kept as “Deleted player” (none: the row goes too); same refusal |
 | `list` | everyone, with admin and archived flags |
@@ -119,7 +121,7 @@ fly volumes create mate_moi_data --size 1 --region cdg
 fly secrets set PIN_PEPPER=$(openssl rand -hex 32)
 fly deploy
 fly ssh console -C "sh -c 'cd /app && node scripts/player.ts add Frank 482915'"
-fly ssh console -C "sh -c 'cd /app && node scripts/player.ts promote Frank'"
+fly ssh console -C "sh -c 'cd /app && node scripts/player.ts owner Frank'"
 ```
 </details>
 

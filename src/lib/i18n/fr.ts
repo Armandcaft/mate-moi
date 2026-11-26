@@ -181,7 +181,8 @@ export const fr = {
 			'Si tu joues la semaine en cours, tu en sors : en phase de groupes tes parties sont retirées, en barrage ou en finale tu perds les tiennes par forfait.',
 		deleteCode: 'Ton code, pour confirmer',
 		deleteConfirm: 'Supprimer définitivement',
-		lastAdmin: 'Tu es le dernier admin. Nomme un autre admin d’abord.'
+		lastAdmin: 'Tu es le dernier admin. Nomme un autre admin d’abord.',
+		owner: 'Tu es le propriétaire de la ligue : transfère d’abord la propriété à un autre admin (onglet Admin).'
 	},
 	admin: {
 		title: 'Admin',
@@ -224,7 +225,17 @@ export const fr = {
 		backupHint:
 			'Un seul fichier : joueurs, parties, rois. À garder privé. Pour le restaurer ou changer de serveur, voir le README.',
 		playerNotFound: 'Joueur introuvable.',
-		notYourself: 'Pas sur ton propre compte.'
+		notYourself: 'Pas sur ton propre compte.',
+		badgeOwner: 'Propriétaire',
+		ownerProtected: 'Le propriétaire de la ligue ne peut être ni retiré des admins, ni archivé, ni supprimé.',
+		ownerOnly: 'Seul le propriétaire peut transférer la propriété.',
+		transferToAdmin: 'La propriété se transfère seulement à un autre admin actif.',
+		transfer: 'Transférer la propriété',
+		transferTitle: 'Faire de {name} le propriétaire ?',
+		transferIntro:
+			'Tu restes admin, mais c’est {name} qui deviendra intouchable : ni retiré des admins, ni archivé, ni supprimé. Tape son nom pour confirmer.',
+		transferConfirm: 'Transférer',
+		transferred: '{name} est maintenant le propriétaire de la ligue.'
 	},
 	league: {
 		weekNotOver: 'La semaine en cours n’est pas terminée.',

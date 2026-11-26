@@ -2,7 +2,7 @@
 import { and, count, eq, isNull, ne, or } from 'drizzle-orm';
 import type { MessageKey, Problem } from '../i18n/index.ts';
 import { db, games, invites, players, sessions } from './db/index.ts';
-import { leaveOpenWeek } from './league.ts';
+import { leaveOpenWeek, type Tx } from './league.ts';
 
 /** A refusal, carrying a message key: the page puts it in the player's language. */
 export class AccountError extends Error implements Problem {
@@ -23,6 +23,7 @@ const NO_PIN = 'deleted:';
  */
 export function setArchived(playerId: number, archived: boolean) {
 	db.transaction((tx) => {
+		if (archived) refuseOwner(tx, playerId);
 		const done = tx
 			.update(players)
 			.set({ active: !archived })
@@ -31,6 +32,12 @@ export function setArchived(playerId: number, archived: boolean) {
 		if (!done.changes) throw new AccountError('admin.playerNotFound');
 		if (archived) leaveOpenWeek(tx);
 	});
+}
+
+/** The owner cannot be archived or deleted: ownership must be transferred first. */
+function refuseOwner(tx: Tx, playerId: number) {
+	const p = tx.select({ isOwner: players.isOwner }).from(players).where(eq(players.id, playerId)).get();
+	if (p?.isOwner) throw new AccountError('admin.ownerProtected');
 }
 
 /** True if `playerId` is an admin and no other active admin is left to run the league. */
@@ -55,6 +62,7 @@ export function isLastAdmin(playerId: number): boolean {
  */
 export function deleteAccount(playerId: number): 'deleted' | 'erased' {
 	return db.transaction((tx) => {
+		refuseOwner(tx, playerId);
 		const left = tx
 			.update(players)
 			.set({ active: false })
