@@ -67,7 +67,7 @@
 			</label>
 
 			{#if form?.message}
-				<p class="text-center text-sm text-[#d27b7b]" role="alert">{form.message}</p>
+				<p class="text-center text-sm text-danger" role="alert">{form.message}</p>
 			{/if}
 
 			<button class="btn btn-gold w-full" disabled={busy}>{t('invite.join')}</button>

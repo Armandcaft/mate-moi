@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import Crown from '#lib/components/Crown.svelte';
 	import LangSwitcher from '#lib/components/LangSwitcher.svelte';
+	import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
 	import { t } from '#lib/i18n/t.svelte.ts';
 	import { SLOGAN_MAX } from '#lib/profile.ts';
 	import type { PageProps } from './$types';
@@ -32,7 +33,7 @@
 	</div>
 
 	{#if form?.message}
-		<p class="card mb-4 border-loss/60 px-4 py-3 text-center text-sm text-[#d27b7b]" role="alert">{form.message}</p>
+		<p class="card mb-4 border-loss/60 px-4 py-3 text-center text-sm text-danger" role="alert">{form.message}</p>
 	{:else if form?.saved}
 		<p class="card mb-4 border-gold/50 px-4 py-3 text-center text-sm text-gold" role="status">
 			{t(form.saved === 'name' ? 'profile.nameSaved' : form.value ? 'profile.sloganSaved' : 'profile.sloganRemoved')}
@@ -52,7 +53,7 @@
 		<label class="block">
 			<span class="mb-1.5 flex justify-between text-sm text-muted">
 				<span>{t('profile.slogan')}</span>
-				<span class="tabular-nums {left < 0 ? 'text-[#d27b7b]' : ''}">{left}</span>
+				<span class="tabular-nums {left < 0 ? 'text-danger' : ''}">{left}</span>
 			</span>
 			<input
 				name="slogan"
@@ -71,5 +72,7 @@
 	<div class="mt-8 text-center">
 		<p class="mb-1 text-xs text-muted">{t('lang.label')}</p>
 		<LangSwitcher />
+		<p class="mt-4 mb-1 text-xs text-muted">{t('theme.label')}</p>
+		<ThemeSwitcher />
 	</div>
 </div>

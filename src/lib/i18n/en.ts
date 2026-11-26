@@ -15,6 +15,12 @@ export const en = {
 	lang: {
 		label: 'Langue / Language / Sprache'
 	},
+	theme: {
+		label: 'Theme',
+		auto: 'Auto',
+		light: 'Light',
+		dark: 'Dark'
+	},
 	nav: {
 		week: 'This week',
 		kings: 'The Kings',

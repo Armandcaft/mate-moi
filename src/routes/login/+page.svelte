@@ -45,7 +45,7 @@
 							<span class="block font-medium">{p.name}</span>
 							{#if p.slogan}<span class="block truncate text-xs text-muted italic">{t('common.quote', { text: p.slogan })}</span>{/if}
 						</span>
-						<input type="radio" name="player" value={p.id} bind:group={selected} class="accent-[#C9A24A]" required />
+						<input type="radio" name="player" value={p.id} bind:group={selected} class="accent-gold" required />
 					</label>
 				{/each}
 			</fieldset>
@@ -66,7 +66,7 @@
 			</label>
 
 			{#if form?.message}
-				<p class="text-center text-sm text-[#d27b7b]" role="alert">{form.message}</p>
+				<p class="text-center text-sm text-danger" role="alert">{form.message}</p>
 			{/if}
 
 			<button class="btn btn-gold w-full" disabled={busy || selected === null}>{t('login.submit')}</button>

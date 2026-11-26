@@ -67,7 +67,7 @@
 {/if}
 
 {#if form?.message}
-	<p class="card mb-4 border-loss/60 px-4 py-3 text-sm text-[#d27b7b]" role="alert">{form.message}</p>
+	<p class="card mb-4 border-loss/60 px-4 py-3 text-sm text-danger" role="alert">{form.message}</p>
 {/if}
 
 {#snippet startButton(label: string)}
@@ -111,7 +111,7 @@
 
 	{#if step?.phase === 'done'}
 		<section class="king-reveal card relative mb-5 overflow-hidden border-gold/50 px-6 py-8 text-center">
-			<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(201,162,74,0.22),transparent_65%)]"></div>
+			<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--color-gold)_22%,transparent),transparent_65%)]"></div>
 			<div class="crown-drop relative"><Crown size={56} class="mx-auto mb-3" /></div>
 			<p class="relative text-xs tracking-[0.25em] text-gold uppercase">{t('week.king', { n: view.week.number })}</p>
 			<p class="font-display text-gold-gradient relative mt-1 text-4xl font-bold">{name(step.king)}</p>
@@ -225,10 +225,10 @@
 	}
 	@keyframes glow {
 		from {
-			box-shadow: 0 0 0 0 rgba(201, 162, 74, 0.45);
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-gold) 45%, transparent);
 		}
 		to {
-			box-shadow: 0 0 60px -20px rgba(201, 162, 74, 0.35);
+			box-shadow: 0 0 60px -20px color-mix(in srgb, var(--color-gold) 35%, transparent);
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {

@@ -46,7 +46,7 @@
 
 	<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
 		<div class="flex items-center gap-2 truncate">
-			<span class="size-3 shrink-0 rounded-full border border-silver/70 bg-silver" title={t('game.white')}></span>
+			<span class="size-3 shrink-0 rounded-full border border-piece-white-edge bg-piece-white" title={t('game.white')}></span>
 			<span class="truncate font-medium {winnerId === game.whiteId ? 'text-gold' : ''} {game.whiteId === meId ? 'underline decoration-line underline-offset-4' : ''}">{white}</span>
 		</div>
 		<span class="font-display text-sm text-muted tabular-nums">
@@ -54,7 +54,7 @@
 		</span>
 		<div class="flex items-center justify-end gap-2 truncate">
 			<span class="truncate font-medium {winnerId === game.blackId ? 'text-gold' : ''} {game.blackId === meId ? 'underline decoration-line underline-offset-4' : ''}">{black}</span>
-			<span class="size-3 shrink-0 rounded-full border border-silver/70 bg-board" title={t('game.black')}></span>
+			<span class="size-3 shrink-0 rounded-full border border-piece-black-edge bg-piece-black" title={t('game.black')}></span>
 		</div>
 	</div>
 

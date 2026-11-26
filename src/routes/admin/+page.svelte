@@ -32,7 +32,7 @@
 <h1 class="font-display mb-5 text-2xl font-bold text-silver">{t('admin.title')}</h1>
 
 {#if form?.message}
-	<p class="card mb-4 border-loss/60 px-4 py-3 text-sm text-[#d27b7b]" role="alert">{form.message}</p>
+	<p class="card mb-4 border-loss/60 px-4 py-3 text-sm text-danger" role="alert">{form.message}</p>
 {/if}
 
 <!-- Invitations -->
@@ -67,7 +67,7 @@
 				<form method="POST" action="?/revoke" use:enhance class="flex items-center justify-between gap-3 px-4 py-3 text-sm">
 					<input type="hidden" name="invite" value={inv.id} />
 					<span class="text-muted">{t('admin.inviteBy', { by: inv.by, when: when.format(inv.expiresAt) })}</span>
-					<button class="text-xs text-[#d27b7b] hover:underline">{t('admin.revoke')}</button>
+					<button class="text-xs text-danger hover:underline">{t('admin.revoke')}</button>
 				</form>
 			{/each}
 		</div>
@@ -96,7 +96,7 @@
 						{#if p.isAdmin}<span class="rounded-full border border-gold/50 px-2 py-0.5 text-gold">{t('admin.badgeAdmin')}</span>{/if}
 						{#if !p.active}<span class="rounded-full border border-line px-2 py-0.5 text-muted">{t('admin.badgeInactive')}</span>{/if}
 						{#if p.mustChangePin}<span class="rounded-full border border-line px-2 py-0.5 text-muted">{t('admin.badgeTempPin')}</span>{/if}
-						{#if locked(p)}<span class="rounded-full border border-loss/60 px-2 py-0.5 text-[#d27b7b]">{t('admin.badgeLocked')}</span>{/if}
+						{#if locked(p)}<span class="rounded-full border border-loss/60 px-2 py-0.5 text-danger">{t('admin.badgeLocked')}</span>{/if}
 					</span>
 				</summary>
 				<form method="POST" use:enhance class="grid grid-cols-2 gap-2 border-t border-line px-4 py-3">

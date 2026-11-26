@@ -54,4 +54,8 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
 - Only a **confirmed** result counts (`toGame` in `league.ts` hides unconfirmed ones from the engine).
 - Answer "no such game" and "not your game" identically (`league.gameNotFound`, « Partie introuvable. »).
 - Theme tokens live in `src/app.css` (`@theme`). Gold is for the king and the main action only.
+  Two palettes: dark (the `@theme` defaults) and light, which redefines the same variables under
+  `prefers-color-scheme: light` and `[data-theme="light"]` (keep both blocks identical). The choice
+  (`mm_theme` cookie, `/theme`, on `/profil`) is put on `<html>` by `hooks.server.ts`; `auto` adds
+  nothing. **Never hard-code a colour in a component** (errors are `text-danger`). `og.ts` stays dark.
 - No personal data in the repo: names and PINs live in the database; `PIN_PEPPER` is a Fly secret.

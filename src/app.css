@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 
-/* "Black & Gold": the board is matte black, the pieces brushed silver, and gold is kept for the King. */
+/*
+ * "Black & Gold": the board is matte black, the pieces brushed silver, and gold is kept for the King.
+ * These dark values are the defaults; "Ivory board" (below) redefines the same variables for light.
+ * `silver` is the main text colour in both.
+ */
 @theme {
 	--color-board: #0b0b0d;
 	--color-surface: #151518;
@@ -12,9 +16,76 @@
 	--color-gold-hi: #e8c976;
 	--color-gold-lo: #a9822f;
 	--color-loss: #8e3b3b;
+	/* Error text. */
+	--color-danger: #d27b7b;
+	/* The colour dots on a game card: the pieces themselves, whatever the theme. */
+	--color-piece-white: #f5f5f5;
+	--color-piece-white-edge: #8a8d94;
+	--color-piece-black: #111111;
+	--color-piece-black-edge: #6b6e76;
 
 	--font-display: 'Cinzel', ui-serif, Georgia, serif;
 	--font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Colours no utility needs: the gold fills (lighter stops in light, to stay readable), the checkerboard. */
+:root {
+	color-scheme: dark;
+	--checker: rgb(255 255 255 / 0.035);
+	--gold-text: linear-gradient(180deg, var(--color-gold-hi), var(--color-gold) 55%, var(--color-gold-lo));
+	--gold-button: linear-gradient(180deg, var(--color-gold-hi), var(--color-gold));
+}
+
+/*
+ * "Ivory board", the light theme. It follows the device unless the player chose a theme on their
+ * profile (`data-theme` on <html>, set by the server from the `mm_theme` cookie): the media query
+ * yields to an explicit `dark`, and `light` applies even on a dark device. The two blocks below must
+ * stay identical. Gold is darker than in the dark theme so gold text stays readable on ivory
+ * (≥ 4.5:1 on board and surface), and the gold fills get lighter stops for the same reason.
+ */
+@media (prefers-color-scheme: light) {
+	:root:not([data-theme='dark']) {
+		color-scheme: light;
+		--color-board: #f4f2ec;
+		--color-surface: #ffffff;
+		--color-raised: #ece9e1;
+		--color-line: #ddd8cb;
+		--color-silver: #1c1c21;
+		--color-muted: #62656d;
+		--color-gold: #8a6614;
+		--color-gold-hi: #c49a3e;
+		--color-gold-lo: #6e500e;
+		--color-loss: #b4413f;
+		--color-danger: #b3382f;
+		--color-piece-white-edge: #8f8a7d;
+		--color-piece-black-edge: #111111;
+		--checker: rgb(0 0 0 / 0.04);
+		--gold-text: linear-gradient(180deg, #a57c22, var(--color-gold) 55%, var(--color-gold-lo));
+		--gold-button: linear-gradient(180deg, var(--color-gold-hi), #b8892f);
+	}
+}
+:root[data-theme='light'] {
+	color-scheme: light;
+	--color-board: #f4f2ec;
+	--color-surface: #ffffff;
+	--color-raised: #ece9e1;
+	--color-line: #ddd8cb;
+	--color-silver: #1c1c21;
+	--color-muted: #62656d;
+	--color-gold: #8a6614;
+	--color-gold-hi: #c49a3e;
+	--color-gold-lo: #6e500e;
+	--color-loss: #b4413f;
+	--color-danger: #b3382f;
+	--color-piece-white-edge: #8f8a7d;
+	--color-piece-black-edge: #111111;
+	--checker: rgb(0 0 0 / 0.04);
+	--gold-text: linear-gradient(180deg, #a57c22, var(--color-gold) 55%, var(--color-gold-lo));
+	--gold-button: linear-gradient(180deg, var(--color-gold-hi), #b8892f);
+}
+/* Chosen on the profile: dark even on a light device (the defaults above, restated for clarity). */
+:root[data-theme='dark'] {
+	color-scheme: dark;
 }
 
 @layer base {
@@ -33,7 +104,7 @@
 }
 
 @utility text-gold-gradient {
-	background: linear-gradient(180deg, var(--color-gold-hi), var(--color-gold) 55%, var(--color-gold-lo));
+	background: var(--gold-text);
 	-webkit-background-clip: text;
 	background-clip: text;
 	color: transparent;
@@ -42,9 +113,9 @@
 /* A faint checkerboard, for the header only. */
 @utility bg-checker {
 	background-image: conic-gradient(
-		rgb(255 255 255 / 0.035) 25%,
+		var(--checker) 25%,
 		transparent 0 50%,
-		rgb(255 255 255 / 0.035) 0 75%,
+		var(--checker) 0 75%,
 		transparent 0
 	);
 	background-size: 28px 28px;
@@ -75,7 +146,8 @@
 }
 
 @utility btn-gold {
-	background: linear-gradient(180deg, var(--color-gold-hi), var(--color-gold));
+	background: var(--gold-button);
+	/* Near-black ink on gold, in both themes. */
 	color: #1a1405;
 	box-shadow: 0 6px 24px -10px var(--color-gold);
 }

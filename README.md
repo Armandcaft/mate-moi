@@ -47,6 +47,7 @@
 | 🙋 **Profiles** | change your name, your motto (60 characters), your code |
 | 🛡️ **Admin tab** | invites, temporary codes, (de)activation, promotion, one-click backup |
 | 🌍 **Three languages** | French (default), English, German; follows the phone, switchable anytime |
+| 🌗 **Light & dark** | black-and-gold or ivory board; follows the phone, or pick one on your profile |
 | 🔐 **Locked down** | peppered scrypt codes, lockout after 5 tries; only login, invitations and link previews are public |
 
 <details>
