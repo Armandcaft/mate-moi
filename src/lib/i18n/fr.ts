@@ -95,7 +95,6 @@ export const fr = {
 		playoff: '{names} se départagent en Armageddon (la nulle compte pour les Noirs).',
 		forTheCrown: 'Pour la couronne',
 		share: 'Partager',
-		shareWhatsapp: 'Partager sur WhatsApp',
 		yourMove: 'À toi de jouer',
 		knockout: 'Barrage et finale',
 		shareKing: '♔ {name} est le Roi de la Semaine {n} ! Qui ose le détrôner ?',

@@ -208,7 +208,7 @@
 
 	<div class="mb-8 grid grid-cols-2 gap-2">
 		<a href={whatsapp(shareText)} target="_blank" rel="noopener" class="btn btn-ghost">
-			{t(over ? 'week.share' : 'week.shareWhatsapp')}
+			{t('week.share')}
 		</a>
 		{#if open && !over}
 			<a href={whatsapp(nudge)} target="_blank" rel="noopener" class="btn btn-ghost">{t('nudge.button')}</a>

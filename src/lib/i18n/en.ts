@@ -93,7 +93,6 @@ export const en = {
 		playoff: '{names} settle it in Armageddon (a draw counts for Black).',
 		forTheCrown: 'For the crown',
 		share: 'Share',
-		shareWhatsapp: 'Share on WhatsApp',
 		yourMove: 'Your move',
 		knockout: 'Play-off and final',
 		shareKing: '♔ {name} is King of the Week {n}! Who dares to dethrone them?',

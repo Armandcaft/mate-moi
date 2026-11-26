@@ -94,7 +94,6 @@ export const de = {
 		playoff: '{names} machen es im Armageddon aus (Remis zählt für Schwarz).',
 		forTheCrown: 'Um die Krone',
 		share: 'Teilen',
-		shareWhatsapp: 'Auf WhatsApp teilen',
 		yourMove: 'Du bist dran',
 		knockout: 'Stechen und Finale',
 		shareKing: '♔ {name} ist König der Woche {n}! Wer traut sich, den Thron zu stürmen?',
