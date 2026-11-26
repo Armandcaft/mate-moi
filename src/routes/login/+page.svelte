@@ -19,6 +19,10 @@
 		<p class="mt-1 text-sm text-muted">{t('login.intro')}</p>
 	</div>
 
+	{#if data.bye}
+		<p class="card mb-6 px-4 py-3 text-center text-sm text-silver" role="status">{t('login.bye')}</p>
+	{/if}
+
 	{#if data.players.length === 0}
 		<p class="card p-5 text-center text-sm text-muted">
 			{t('login.noPlayers')} <code class="text-silver">npm run player -- add</code>.

@@ -1,11 +1,12 @@
 <script lang="ts">
 	import Crown from '#lib/components/Crown.svelte';
+	import { playerName } from '#lib/format.ts';
 	import { dateLocale, t } from '#lib/i18n/t.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
-	const names = $derived(new Map(data.players.map((p) => [p.id, p.name])));
+	const names = $derived(new Map(data.players.map((p) => [p.id, playerName(t, p)])));
 	const slogans = $derived(new Map(data.players.map((p) => [p.id, p.slogan])));
 	const name = (id: number) => names.get(id) ?? '?';
 	const podium = $derived(
@@ -87,14 +88,14 @@
 				<tr class="border-b border-line text-[11px] text-muted">
 					<th></th>
 					{#each active as col (col.id)}
-						<th class="px-2 py-2.5 font-medium">{col.name}</th>
+						<th class="px-2 py-2.5 font-medium">{playerName(t, col)}</th>
 					{/each}
 				</tr>
 			</thead>
 			<tbody>
 				{#each active as row (row.id)}
 					<tr class="border-b border-line/60 last:border-0">
-						<th class="py-3 pr-2 pl-4 text-left font-medium text-silver">{row.name}</th>
+						<th class="py-3 pr-2 pl-4 text-left font-medium text-silver">{playerName(t, row)}</th>
 						{#each active as col (col.id)}
 							{@const rec = data.h2h.get(row.id)?.get(col.id)}
 							<td class="px-2 py-3 text-center {row.id === col.id ? 'bg-board/50' : ''}">

@@ -11,3 +11,9 @@ export const score = (result: Result) => (result === '1/2-1/2' ? '½ – ½' : r
 
 /** A link that opens WhatsApp with `text` ready to send to the group. */
 export const whatsapp = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+/** A player's name as shown: a deleted player's (`~deleted-…`) becomes "Deleted player". */
+export function playerName(t: Translate, p: { name: string; deletedAt: Date | null } | undefined): string {
+	if (!p) return '?';
+	return p.deletedAt ? t('player.deleted') : p.name;
+}

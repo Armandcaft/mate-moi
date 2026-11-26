@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { describe, score } from '#lib/format.ts';
+	import { describe, playerName, score } from '#lib/format.ts';
 	import { t } from '#lib/i18n/t.svelte.ts';
 	import type { GameRow } from '#lib/server/db/schema.ts';
 
@@ -9,10 +9,10 @@
 		names,
 		meId,
 		open
-	}: { game: GameRow; names: Map<number, { name: string }>; meId: number; open: boolean } = $props();
+	}: { game: GameRow; names: Map<number, { name: string; deletedAt: Date | null }>; meId: number; open: boolean } = $props();
 
-	const white = $derived(names.get(game.whiteId)?.name ?? '?');
-	const black = $derived(names.get(game.blackId)?.name ?? '?');
+	const white = $derived(playerName(t, names.get(game.whiteId)));
+	const black = $derived(playerName(t, names.get(game.blackId)));
 	const mine = $derived(game.whiteId === meId || game.blackId === meId);
 	const confirmed = $derived(!!game.confirmedAt);
 	const pending = $derived(!!game.result && !confirmed);

@@ -1,6 +1,6 @@
 import { pairs } from './schedule';
 import { rank, winnerOf } from './standings';
-import type { Game, NewGame, PlayerId, Rules } from './types';
+import type { Game, NewGame, PlayerId, Result, Rules } from './types';
 import { RULES } from './types';
 
 export type Step =
@@ -10,7 +10,9 @@ export type Step =
 	| { phase: 'playoff'; contenders: PlayerId[]; create: NewGame[] }
 	/** The final (and its Armageddon decider if drawn). */
 	| { phase: 'final'; finalists: [PlayerId, PlayerId]; create: NewGame[] }
-	| { phase: 'done'; finalists: [PlayerId, PlayerId]; king: PlayerId; create: [] };
+	| { phase: 'done'; finalists: [PlayerId, PlayerId]; king: PlayerId; create: [] }
+	/** Fewer than two players are left (the others left mid-week): the week ends with no king. */
+	| { phase: 'abandoned'; create: [] };
 
 const done = (g: Game) => g.result !== null;
 
@@ -22,6 +24,7 @@ const done = (g: Game) => g.result !== null;
  * `players` is in seed order only for display; ties are always settled by `rank`.
  */
 export function nextStep(players: PlayerId[], games: Game[], rules: Rules = RULES): Step {
+	if (players.length < 2) return { phase: 'abandoned', create: [] };
 	const group = games.filter((g) => g.stage === 'group');
 	if (!group.every(done)) return { phase: 'group', create: [] };
 
@@ -79,4 +82,45 @@ export function nextStep(players: PlayerId[], games: Game[], rules: Rules = RULE
 			{ stage: 'final', round: last.round + 1, whiteId: seed2, blackId: seed1, armageddon: true }
 		]
 	};
+}
+
+/** What the week must do about players who left the league (archived or deleted) mid-week. */
+export interface Departures {
+	/** Indices into `games` of group games to delete. */
+	drop: number[];
+	/** Indices into `games` of unfinished games to record as lost by whoever left. */
+	forfeit: { index: number; result: Result }[];
+}
+
+/**
+ * A player who leaves mid-week (`gone`) must not block it:
+ * - during the group stage, ALL their group games go (played or not), so the week stays an even
+ *   round-robin among the others;
+ * - in the play-off or the final, each unfinished game of theirs is lost by forfeit. Called again
+ *   after each new game is created, this also forfeits the games made for them later (a play-off
+ *   round, or the final when they were the top seed).
+ * If both players of a game left, White is given the win: anything that ends the week will do.
+ * Players not in the week (`players`) are ignored. Pure: `league.ts` applies it, then `nextStep`.
+ */
+export function departures(players: PlayerId[], games: Game[], gone: Set<PlayerId>): Departures {
+	const none: Departures = { drop: [], forfeit: [] };
+	if (!players.some((id) => gone.has(id))) return none;
+	const involved = (g: Game) => gone.has(g.whiteId) || gone.has(g.blackId);
+	const phase = nextStep(players, games).phase;
+
+	if (phase === 'group')
+		return {
+			drop: games.flatMap((g, i) => (g.stage === 'group' && involved(g) ? [i] : [])),
+			forfeit: []
+		};
+	if (phase === 'playoff' || phase === 'final')
+		return {
+			drop: [],
+			forfeit: games.flatMap((g, i) =>
+				!done(g) && involved(g)
+					? [{ index: i, result: (gone.has(g.whiteId) && !gone.has(g.blackId) ? '0-1' : '1-0') as Result }]
+					: []
+			)
+		};
+	return none;
 }

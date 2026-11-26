@@ -33,12 +33,16 @@ export const en = {
 		group: 'Group stage',
 		playoff: 'Play-off',
 		final: 'Final',
-		done: 'Crowned'
+		done: 'Crowned',
+		abandoned: 'Called off'
 	},
 	stage: {
 		group: 'Group',
 		playoff: 'Play-off',
 		final: 'Final'
+	},
+	player: {
+		deleted: 'Deleted player'
 	},
 	table: {
 		player: 'Player',
@@ -88,7 +92,8 @@ export const en = {
 		shareWhatsapp: 'Share on WhatsApp',
 		yourMove: 'Your move',
 		knockout: 'Play-off and final',
-		shareKing: '♔ {name} is King of the Week {n}! Who dares to dethrone them?'
+		shareKing: '♔ {name} is King of the Week {n}! Who dares to dethrone them?',
+		abandoned: 'Not enough players left this week: no king. Same time next week.'
 	},
 	kings: {
 		title: 'The Kings',
@@ -107,7 +112,8 @@ export const en = {
 		submit: 'Let me in',
 		chooseName: 'Pick your name.',
 		wrongCode: 'Wrong code.',
-		locked: 'Too many tries. Try again in {min} min.'
+		locked: 'Too many tries. Try again in {min} min.',
+		bye: 'Account deleted. Thanks for the games ♔'
 	},
 	code: {
 		title: 'My code',
@@ -165,7 +171,15 @@ export const en = {
 		badName: 'Your name: 2 to 24 letters (spaces, hyphens and apostrophes allowed).',
 		nameTaken: 'That name’s taken. Add an initial?',
 		sloganTooLong: 'Your motto: {max} characters max.',
-		sloganLink: 'No links in your motto.'
+		sloganLink: 'No links in your motto.',
+		deleteTitle: 'Delete my account',
+		deleteIntro:
+			'Your name, code and motto are erased for good. Your games stay in the history, as “Deleted player”.',
+		deleteWeek:
+			'If you’re playing this week, you leave it: in the group stage your games are removed, in a play-off or the final you lose yours by forfeit.',
+		deleteCode: 'Your code, to confirm',
+		deleteConfirm: 'Delete for good',
+		lastAdmin: 'You’re the last admin. Make someone else an admin first.'
 	},
 	admin: {
 		title: 'Admin',
@@ -185,15 +199,24 @@ export const en = {
 		tempPinFor: 'Temporary code for {name}:',
 		tempPinHint: 'Send it to them privately: they’ll choose their own when they sign in. It won’t be shown again.',
 		badgeAdmin: 'Admin',
-		badgeInactive: 'Inactive',
+		badgeArchived: 'Archived',
 		badgeTempPin: 'Temporary code',
 		badgeLocked: 'Locked',
 		resetPin: 'New temporary code',
-		deactivate: 'Deactivate',
-		activate: 'Reactivate',
+		archive: 'Archive',
+		unarchive: 'Restore',
 		demote: 'Remove admin',
 		promote: 'Make admin',
-		deactivateHint: 'A deactivated player is signed out, keeps their history and is left out of new weeks.',
+		archiveHint:
+			'Archive: the player is signed out, hidden from the login and taken out of this week; their history stays and you can restore them. Delete: their name and code are erased for good, their games stay as “Deleted player”.',
+		delete: 'Delete',
+		deleteTitle: 'Delete {name}?',
+		deleteIntro:
+			'Their name, code and motto are erased for good; their games stay, as “Deleted player”. Type their name to confirm.',
+		deleteName: 'Their name, exactly',
+		deleteConfirm: 'Delete for good',
+		deleteNameMismatch: 'That’s not their name.',
+		deleted: '{name} is deleted.',
 		backup: 'Backup',
 		download: 'Download the whole league (.db)',
 		backupHint: 'One file: players, games, kings. Keep it private. To restore it or move servers, see the README.',

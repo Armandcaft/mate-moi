@@ -75,4 +75,33 @@
 		<p class="mt-4 mb-1 text-xs text-muted">{t('theme.label')}</p>
 		<ThemeSwitcher />
 	</div>
+
+	<!-- Danger zone. A <details> is the confirmation step: it works without JS. -->
+	<details class="card mt-10 border-loss/50 p-4" open={!!form?.deleteMessage}>
+		<summary class="cursor-pointer list-none text-center text-sm font-semibold text-danger">{t('profile.deleteTitle')}</summary>
+		<div class="mt-3 space-y-2 text-sm text-muted">
+			<p>{t('profile.deleteIntro')}</p>
+			<p>{t('profile.deleteWeek')}</p>
+		</div>
+		<form method="POST" action="?/delete" use:enhance class="mt-4">
+			<label class="block">
+				<span class="mb-1.5 block text-sm text-muted">{t('profile.deleteCode')}</span>
+				<input
+					name="pin"
+					type="password"
+					inputmode="numeric"
+					autocomplete="current-password"
+					pattern="[0-9]*"
+					minlength="4"
+					maxlength="8"
+					required
+					class="{field} text-center tracking-[0.5em]"
+				/>
+			</label>
+			{#if form?.deleteMessage}
+				<p class="mt-3 text-center text-sm text-danger" role="alert">{form.deleteMessage}</p>
+			{/if}
+			<button class="btn mt-3 w-full border border-danger/60 text-danger">{t('profile.deleteConfirm')}</button>
+		</form>
+	</details>
 </div>

@@ -25,6 +25,11 @@ export const players = sqliteTable('players', {
 	isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
 	/** A short motto the player writes (≤ 60 characters), shown when they are crowned. */
 	slogan: text('slogan'),
+	/**
+	 * The player deleted their account (or an admin did): name, code and slogan are gone, the
+	 * games stay, shown as "deleted player". Also inactive. See `accounts.ts`.
+	 */
+	deletedAt: integer('deleted_at', { mode: 'timestamp' }),
 	createdAt: createdAt()
 });
 

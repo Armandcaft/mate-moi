@@ -5,6 +5,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { MessageKey, Params, Problem } from '../i18n/index.ts';
+import { AccountError, deleteAccount, setArchived as archive } from './accounts.ts';
 import { sha256 } from './auth.ts';
 import { db, invites, players, sessions, sqlite, type Player } from './db/index.ts';
 import { joinCurrentWeek } from './league.ts';
@@ -117,6 +118,7 @@ export function allPlayers(): PlayerSummary[] {
 			lockedUntil: players.lockedUntil
 		})
 		.from(players)
+		.where(isNull(players.deletedAt))
 		.orderBy(desc(players.active), asc(players.name))
 		.all();
 }
@@ -141,9 +143,37 @@ function guardOther(actorId: number, playerId: number) {
 	if (actorId === playerId) throw new AdminError('admin.notYourself');
 }
 
-export function setActive(actorId: number, playerId: number, active: boolean) {
+/** `AccountError`s become `AdminError`s, so the admin page has one kind of refusal to show. */
+function asAdmin<T>(fn: () => T): T {
+	try {
+		return fn();
+	} catch (e) {
+		if (e instanceof AccountError) throw new AdminError(e.key);
+		throw e;
+	}
+}
+
+/** Archive or restore (`accounts.ts`): archiving also takes them out of the open week. */
+export function setArchived(actorId: number, playerId: number, archived: boolean) {
 	guardOther(actorId, playerId);
-	db.update(players).set({ active }).where(eq(players.id, playerId)).run();
+	asAdmin(() => archive(playerId, archived));
+}
+
+/**
+ * Delete someone else's account (`accounts.ts`). The admin types the player's exact name, so a
+ * slip of the finger cannot do it. Returns the name, for the confirmation message.
+ */
+export function deletePlayer(actorId: number, playerId: number, typedName: string): string {
+	guardOther(actorId, playerId);
+	const player = db
+		.select({ name: players.name })
+		.from(players)
+		.where(and(eq(players.id, playerId), isNull(players.deletedAt)))
+		.get();
+	if (!player) throw new AdminError('admin.playerNotFound');
+	if (typedName.trim() !== player.name) throw new AdminError('admin.deleteNameMismatch');
+	asAdmin(() => deleteAccount(playerId));
+	return player.name;
 }
 
 export function setAdmin(actorId: number, playerId: number, isAdmin: boolean) {

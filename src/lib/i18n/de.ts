@@ -33,12 +33,16 @@ export const de = {
 		group: 'Gruppenphase',
 		playoff: 'Stechen',
 		final: 'Finale',
-		done: 'Gekrönt'
+		done: 'Gekrönt',
+		abandoned: 'Abgesagt'
 	},
 	stage: {
 		group: 'Gruppe',
 		playoff: 'Stechen',
 		final: 'Finale'
+	},
+	player: {
+		deleted: 'Gelöschter Spieler'
 	},
 	table: {
 		player: 'Spieler',
@@ -89,7 +93,8 @@ export const de = {
 		shareWhatsapp: 'Auf WhatsApp teilen',
 		yourMove: 'Du bist dran',
 		knockout: 'Stechen und Finale',
-		shareKing: '♔ {name} ist König der Woche {n}! Wer traut sich, den Thron zu stürmen?'
+		shareKing: '♔ {name} ist König der Woche {n}! Wer traut sich, den Thron zu stürmen?',
+		abandoned: 'Diese Woche sind nicht mehr genug Spieler übrig: kein König. Nächste Woche geht’s weiter.'
 	},
 	kings: {
 		title: 'Die Könige',
@@ -108,7 +113,8 @@ export const de = {
 		submit: 'Los geht’s',
 		chooseName: 'Wähl deinen Namen.',
 		wrongCode: 'Falscher Code.',
-		locked: 'Zu viele Versuche. Probier es in {min} Min. noch mal.'
+		locked: 'Zu viele Versuche. Probier es in {min} Min. noch mal.',
+		bye: 'Konto gelöscht. Danke für die Partien ♔'
 	},
 	code: {
 		title: 'Mein Code',
@@ -166,7 +172,15 @@ export const de = {
 		badName: 'Dein Name: 2 bis 24 Buchstaben (Leerzeichen, Bindestriche und Apostrophe erlaubt).',
 		nameTaken: 'Den Namen gibt es schon. Vielleicht mit Initiale?',
 		sloganTooLong: 'Dein Motto: höchstens {max} Zeichen.',
-		sloganLink: 'Keine Links im Motto.'
+		sloganLink: 'Keine Links im Motto.',
+		deleteTitle: 'Mein Konto löschen',
+		deleteIntro:
+			'Dein Name, dein Code und dein Motto werden endgültig gelöscht. Deine Partien bleiben im Verlauf, als „Gelöschter Spieler“.',
+		deleteWeek:
+			'Spielst du in der laufenden Woche mit, bist du raus: in der Gruppenphase werden deine Partien entfernt, im Stechen oder Finale verlierst du deine kampflos.',
+		deleteCode: 'Dein Code, zur Bestätigung',
+		deleteConfirm: 'Endgültig löschen',
+		lastAdmin: 'Du bist der letzte Admin. Mach zuerst jemand anderen zum Admin.'
 	},
 	admin: {
 		title: 'Admin',
@@ -186,16 +200,24 @@ export const de = {
 		tempPinFor: 'Vorläufiger Code für {name}:',
 		tempPinHint: 'Schick ihn privat: Beim Anmelden wählt er seinen eigenen. Er wird nicht noch einmal angezeigt.',
 		badgeAdmin: 'Admin',
-		badgeInactive: 'Inaktiv',
+		badgeArchived: 'Archiviert',
 		badgeTempPin: 'Vorläufiger Code',
 		badgeLocked: 'Gesperrt',
 		resetPin: 'Code zurücksetzen',
-		deactivate: 'Deaktivieren',
-		activate: 'Reaktivieren',
+		archive: 'Archivieren',
+		unarchive: 'Zurückholen',
 		demote: 'Admin entziehen',
 		promote: 'Zum Admin machen',
-		deactivateHint:
-			'Ein deaktivierter Spieler wird abgemeldet, behält seinen Verlauf und ist bei neuen Wochen nicht mehr dabei.',
+		archiveHint:
+			'Archivieren: Der Spieler wird abgemeldet, verschwindet aus der Anmeldung und ist aus der laufenden Woche raus; sein Verlauf bleibt, und du kannst ihn zurückholen. Löschen: Name und Code sind endgültig weg, seine Partien bleiben als „Gelöschter Spieler“.',
+		delete: 'Löschen',
+		deleteTitle: '{name} löschen?',
+		deleteIntro:
+			'Name, Code und Motto werden endgültig gelöscht; die Partien bleiben, als „Gelöschter Spieler“. Tipp zur Bestätigung den Namen ein.',
+		deleteName: 'Der Name, genau so',
+		deleteConfirm: 'Endgültig löschen',
+		deleteNameMismatch: 'Der Name stimmt nicht.',
+		deleted: '{name} ist gelöscht.',
 		backup: 'Backup',
 		download: 'Ganze Liga herunterladen (.db)',
 		backupHint:

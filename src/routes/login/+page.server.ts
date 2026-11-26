@@ -7,9 +7,13 @@ import { verifyPin } from '#lib/server/pin.ts';
 import { say } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = ({ locals }) => {
+export const load: PageServerLoad = ({ locals, url }) => {
 	if (locals.player) redirect(303, '/');
-	return { players: activePlayers().map((p) => ({ id: p.id, name: p.name, slogan: p.slogan })) };
+	return {
+		/** Just deleted their account (`/profil`). */
+		bye: url.searchParams.has('bye'),
+		players: activePlayers().map((p) => ({ id: p.id, name: p.name, slogan: p.slogan }))
+	};
 };
 
 export const actions: Actions = {

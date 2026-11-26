@@ -6,8 +6,9 @@ import {
 	pendingInvites,
 	resetPin,
 	revokeInvite,
-	setActive,
-	setAdmin
+	deletePlayer,
+	setAdmin,
+	setArchived
 } from '#lib/server/admin.ts';
 import { say, translator } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
@@ -26,12 +27,13 @@ export const load: PageServerLoad = ({ locals }) => {
 /** Run an admin action on the `player` in the form, turning refusals into a page message. */
 async function onPlayer(
 	{ request, locals }: RequestEvent,
-	fn: (actorId: number, playerId: number) => Record<string, unknown> | void
+	fn: (actorId: number, playerId: number, form: FormData) => Record<string, unknown> | void
 ) {
 	const me = admin(locals);
-	const playerId = Number((await request.formData()).get('player'));
+	const form = await request.formData();
+	const playerId = Number(form.get('player'));
 	try {
-		return fn(me.id, playerId) ?? undefined;
+		return fn(me.id, playerId, form) ?? undefined;
 	} catch (e) {
 		if (e instanceof AdminError) return fail(400, { message: say(locals.locale, e) });
 		throw e;
@@ -53,8 +55,10 @@ export const actions: Actions = {
 			const temp = resetPin(id);
 			return { tempPin: temp, tempFor: id };
 		}),
-	deactivate: (e) => onPlayer(e, (me, id) => setActive(me, id, false)),
-	activate: (e) => onPlayer(e, (me, id) => setActive(me, id, true)),
+	archive: (e) => onPlayer(e, (me, id) => setArchived(me, id, true)),
+	unarchive: (e) => onPlayer(e, (me, id) => setArchived(me, id, false)),
+	delete: (e) =>
+		onPlayer(e, (me, id, form) => ({ deleted: deletePlayer(me, id, String(form.get('name') ?? '')) })),
 	promote: (e) => onPlayer(e, (me, id) => setAdmin(me, id, true)),
 	demote: (e) => onPlayer(e, (me, id) => setAdmin(me, id, false))
 };

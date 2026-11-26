@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import Crown from '#lib/components/Crown.svelte';
 	import GameCard from '#lib/components/GameCard.svelte';
-	import { whatsapp } from '#lib/format.ts';
+	import { playerName, whatsapp } from '#lib/format.ts';
 	import { locale, t } from '#lib/i18n/t.svelte.ts';
 	import type { PageProps } from './$types';
 
@@ -11,9 +11,11 @@
 
 	const view = $derived(data.view);
 	const me = $derived(data.me!);
-	const name = (id: number) => view?.players.get(id)?.name ?? '?';
+	const name = (id: number) => playerName(t, view?.players.get(id));
 	const open = $derived(!!view && !view.week.closedAt);
 	const step = $derived(view?.step);
+	/** Over: crowned, or called off for want of players. The next week can start. */
+	const over = $derived(step?.phase === 'done' || step?.phase === 'abandoned');
 
 	const groupGames = $derived(view?.games.filter((g) => g.stage === 'group') ?? []);
 	const played = $derived(groupGames.filter((g) => g.confirmedAt).length);
@@ -119,6 +121,10 @@
 				<p class="relative mt-2 text-sm text-silver/90 italic">{t('common.quote', { text: view.players.get(step.king)?.slogan ?? '' })}</p>
 			{/if}
 		</section>
+	{:else if step?.phase === 'abandoned'}
+		<section class="card mb-5 px-4 py-4 text-center text-sm text-muted" role="status">
+			{t('week.abandoned')}
+		</section>
 	{:else if step?.phase === 'playoff'}
 		<section class="card mb-5 border-gold/30 px-4 py-3 text-sm">
 			<span class="text-gold">{t('week.tie')}</span>
@@ -133,47 +139,49 @@
 		</section>
 	{/if}
 
-	<!-- Standings -->
-	<section class="card mb-6 overflow-hidden">
-		<table class="w-full text-sm tabular-nums">
-			<thead class="text-[11px] tracking-wider text-muted uppercase">
-				<tr class="border-b border-line">
-					<th class="py-2.5 pl-4 text-left font-medium">#</th>
-					<th class="py-2.5 text-left font-medium">{t('table.player')}</th>
-					<th class="py-2.5 text-center font-medium" title={t('table.playedTitle')}>{t('table.played')}</th>
-					<th class="py-2.5 text-center font-medium" title={t('table.winsTitle')}>{t('table.wins')}</th>
-					<th class="py-2.5 text-center font-medium" title={t('table.drawsTitle')}>{t('table.draws')}</th>
-					<th class="py-2.5 text-center font-medium" title={t('table.lossesTitle')}>{t('table.losses')}</th>
-					<th class="py-2.5 pr-4 text-right font-medium">{t('table.points')}</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each view.standings as line (line.playerId)}
-					{@const leader = step?.phase === 'done' ? step.king === line.playerId : line.rank === 1 && line.points > 0}
-					<tr class="border-b border-line/60 last:border-0 {line.playerId === me.id ? 'bg-raised/60' : ''}">
-						<td class="py-3 pl-4 text-muted">{line.rank}</td>
-						<td class="py-3 font-medium {leader ? 'text-gold' : 'text-silver'}">
-							<span class="inline-flex items-center gap-1.5">
-								{name(line.playerId)}
-								{#if step?.phase === 'done' && step.king === line.playerId}<Crown size={14} />{/if}
-							</span>
-						</td>
-						<td class="py-3 text-center text-muted">{line.played}</td>
-						<td class="py-3 text-center">{line.wins}</td>
-						<td class="py-3 text-center">{line.draws}</td>
-						<td class="py-3 text-center">{line.losses}</td>
-						<td class="py-3 pr-4 text-right text-base font-semibold {leader ? 'text-gold' : 'text-silver'}">{line.points}</td>
+	<!-- Standings (none left in a week called off) -->
+	{#if view.standings.length}
+		<section class="card mb-6 overflow-hidden">
+			<table class="w-full text-sm tabular-nums">
+				<thead class="text-[11px] tracking-wider text-muted uppercase">
+					<tr class="border-b border-line">
+						<th class="py-2.5 pl-4 text-left font-medium">#</th>
+						<th class="py-2.5 text-left font-medium">{t('table.player')}</th>
+						<th class="py-2.5 text-center font-medium" title={t('table.playedTitle')}>{t('table.played')}</th>
+						<th class="py-2.5 text-center font-medium" title={t('table.winsTitle')}>{t('table.wins')}</th>
+						<th class="py-2.5 text-center font-medium" title={t('table.drawsTitle')}>{t('table.draws')}</th>
+						<th class="py-2.5 text-center font-medium" title={t('table.lossesTitle')}>{t('table.losses')}</th>
+						<th class="py-2.5 pr-4 text-right font-medium">{t('table.points')}</th>
 					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</section>
+				</thead>
+				<tbody>
+					{#each view.standings as line (line.playerId)}
+						{@const leader = step?.phase === 'done' ? step.king === line.playerId : line.rank === 1 && line.points > 0}
+						<tr class="border-b border-line/60 last:border-0 {line.playerId === me.id ? 'bg-raised/60' : ''}">
+							<td class="py-3 pl-4 text-muted">{line.rank}</td>
+							<td class="py-3 font-medium {leader ? 'text-gold' : 'text-silver'}">
+								<span class="inline-flex items-center gap-1.5">
+									{name(line.playerId)}
+									{#if step?.phase === 'done' && step.king === line.playerId}<Crown size={14} />{/if}
+								</span>
+							</td>
+							<td class="py-3 text-center text-muted">{line.played}</td>
+							<td class="py-3 text-center">{line.wins}</td>
+							<td class="py-3 text-center">{line.draws}</td>
+							<td class="py-3 text-center">{line.losses}</td>
+							<td class="py-3 pr-4 text-right text-base font-semibold {leader ? 'text-gold' : 'text-silver'}">{line.points}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</section>
+	{/if}
 
-	<div class="mb-8 grid gap-2 {step?.phase === 'done' ? 'grid-cols-2' : ''}">
+	<div class="mb-8 grid gap-2 {over ? 'grid-cols-2' : ''}">
 		<a href={whatsapp(shareText)} target="_blank" rel="noopener" class="btn btn-ghost">
-			{t(step?.phase === 'done' ? 'week.share' : 'week.shareWhatsapp')}
+			{t(over ? 'week.share' : 'week.shareWhatsapp')}
 		</a>
-		{#if step?.phase === 'done'}
+		{#if over}
 			{@render startButton(t('week.label', { n: view.week.number + 1 }))}
 		{/if}
 	</div>
@@ -200,14 +208,16 @@
 		</section>
 	{/if}
 
-	<section>
-		<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('phase.group')}</h2>
-		<div class="grid gap-3">
-			{#each groupGames.filter((g) => !todoIds.has(g.id)) as game (game.id)}
-				<GameCard {game} names={view.players} meId={me.id} {open} />
-			{/each}
-		</div>
-	</section>
+	{#if groupGames.length}
+		<section>
+			<h2 class="mb-3 text-xs tracking-[0.2em] text-muted uppercase">{t('phase.group')}</h2>
+			<div class="grid gap-3">
+				{#each groupGames.filter((g) => !todoIds.has(g.id)) as game (game.id)}
+					<GameCard {game} names={view.players} meId={me.id} {open} />
+				{/each}
+			</div>
+		</section>
+	{/if}
 {/if}
 
 <style>

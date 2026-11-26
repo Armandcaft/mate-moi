@@ -23,6 +23,14 @@
 		}
 	}
 
+	/** What the admin typed in each player's delete confirmation. */
+	let typed = $state<Record<number, string>>({});
+	/** Without JS the delete button stays enabled: the server checks the name either way. */
+	let hydrated = $state(false);
+	$effect(() => {
+		hydrated = true;
+	});
+
 	/** In the sharer's language: they know who they are inviting. */
 	const inviteMessage = (link: string) => t('admin.inviteMessage', { link });
 </script>
@@ -33,6 +41,8 @@
 
 {#if form?.message}
 	<p class="card mb-4 border-loss/60 px-4 py-3 text-sm text-danger" role="alert">{form.message}</p>
+{:else if form?.deleted}
+	<p class="card mb-4 px-4 py-3 text-sm text-silver" role="status">{t('admin.deleted', { name: String(form.deleted) })}</p>
 {/if}
 
 <!-- Invitations -->
@@ -94,7 +104,7 @@
 					<span class="font-medium text-silver">{p.name}{me ? ` ${t('common.you')}` : ''}</span>
 					<span class="flex flex-wrap justify-end gap-1 text-[10px] tracking-wider uppercase">
 						{#if p.isAdmin}<span class="rounded-full border border-gold/50 px-2 py-0.5 text-gold">{t('admin.badgeAdmin')}</span>{/if}
-						{#if !p.active}<span class="rounded-full border border-line px-2 py-0.5 text-muted">{t('admin.badgeInactive')}</span>{/if}
+						{#if !p.active}<span class="rounded-full border border-line px-2 py-0.5 text-muted">{t('admin.badgeArchived')}</span>{/if}
 						{#if p.mustChangePin}<span class="rounded-full border border-line px-2 py-0.5 text-muted">{t('admin.badgeTempPin')}</span>{/if}
 						{#if locked(p)}<span class="rounded-full border border-loss/60 px-2 py-0.5 text-danger">{t('admin.badgeLocked')}</span>{/if}
 					</span>
@@ -104,9 +114,9 @@
 					<button formaction="?/reset" class="btn btn-ghost text-xs">{t('admin.resetPin')}</button>
 					{#if !me}
 						{#if p.active}
-							<button formaction="?/deactivate" class="btn btn-ghost text-xs">{t('admin.deactivate')}</button>
+							<button formaction="?/archive" class="btn btn-ghost text-xs">{t('admin.archive')}</button>
 						{:else}
-							<button formaction="?/activate" class="btn btn-ghost text-xs">{t('admin.activate')}</button>
+							<button formaction="?/unarchive" class="btn btn-ghost text-xs">{t('admin.unarchive')}</button>
 						{/if}
 						{#if p.isAdmin}
 							<button formaction="?/demote" class="btn btn-ghost text-xs">{t('admin.demote')}</button>
@@ -115,11 +125,44 @@
 						{/if}
 					{/if}
 				</form>
+				{#if !me}
+					<details class="border-t border-line px-4 py-3">
+						<summary class="cursor-pointer list-none text-center text-xs font-semibold text-danger">{t('admin.delete')}</summary>
+						<form
+							method="POST"
+							action="?/delete"
+							use:enhance={() =>
+								async ({ update }) => {
+									await update();
+									typed[p.id] = '';
+								}}
+							class="mt-3 grid gap-2"
+						>
+							<input type="hidden" name="player" value={p.id} />
+							<p class="text-sm font-medium text-silver">{t('admin.deleteTitle', { name: p.name })}</p>
+							<p class="text-xs text-muted">{t('admin.deleteIntro')}</p>
+							<label class="block">
+								<span class="mb-1 block text-xs text-muted">{t('admin.deleteName')}</span>
+								<input
+									name="name"
+									bind:value={typed[p.id]}
+									autocomplete="off"
+									spellcheck="false"
+									placeholder={p.name}
+									class="w-full rounded-xl border border-line bg-surface px-3 py-2 text-silver outline-none focus:border-danger"
+								/>
+							</label>
+							<button class="btn border border-danger/60 text-xs text-danger" disabled={hydrated && typed[p.id] !== p.name}>
+								{t('admin.deleteConfirm')}
+							</button>
+						</form>
+					</details>
+				{/if}
 			</details>
 		{/each}
 	</div>
 	<p class="mt-2 text-xs text-muted">
-		{t('admin.deactivateHint')}
+		{t('admin.archiveHint')}
 	</p>
 </section>
 

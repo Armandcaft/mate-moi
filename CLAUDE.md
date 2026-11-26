@@ -33,6 +33,13 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   load) and answers 404. `/invitation/[token]` is public: the one-time token is the authorization.
   A newcomer joins the running week only during its group stage (`joinCurrentWeek`, adding
   `joinerSchedule`'s games so the week stays a full round-robin); after that, the next week.
+- Leaving: **archive** = `active` false (reversible); **delete** (`src/lib/server/accounts.ts`) =
+  `deleted_at`, name `~deleted-<id>`, code unusable, sessions and unused invites gone, games kept and
+  shown as « Joueur supprimé » via `playerName` (`format.ts`); a player with no game is removed
+  outright. Either way they leave the open week: `advance` (league.ts) applies `departures`
+  (tournament): group stage → all their group games dropped; play-off/final → their unfinished games
+  forfeited, including ones created for them later; < 2 players left → week closed with no king
+  (`abandoned`). The last active admin cannot delete themselves. The CLI refuses a player in the open week.
 - Games per opponent: `gamesPerPairFor(players)` when a week starts (3 / 2 / 1 by group size); a
   joiner plays the running week's own count, read back with `gamesPerPairIn`, never the new size's.
 - `src/lib/i18n/` — French (default and fallback), English, German. `fr.ts` is the source of truth;

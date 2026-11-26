@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import satori from 'satori';
 import { translator, type Locale, type Translate } from '../i18n/index.ts';
+import { playerName } from '../format.ts';
 import type { WeekView } from './league.ts';
 
 export const OG_WIDTH = 1200;
@@ -62,7 +63,7 @@ const crown = (size: number): Node => ({
 function card(view: WeekView | null, locale: Locale): Node {
 	const t = translator(locale);
 	const caps = (s: string) => s.toLocaleUpperCase(locale);
-	const name = (id: number) => view?.players.get(id)?.name ?? '?';
+	const name = (id: number) => playerName(t, view?.players.get(id));
 	const step = view?.step;
 
 	const header = h(
@@ -177,7 +178,7 @@ export function standingsLine(view: WeekView | null, locale: Locale): string {
 	const t = translator(locale);
 	if (!view) return t('preview.tagline');
 	return view.standings
-		.map((l) => `${view.players.get(l.playerId)?.name ?? '?'} ${pts(t, l.points)}`)
+		.map((l) => `${playerName(t, view.players.get(l.playerId))} ${pts(t, l.points)}`)
 		.join(' · ');
 }
 

@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import {
+	departures,
 	gamesPerPairFor,
 	gamesPerPairIn,
 	groupSchedule,
@@ -28,12 +29,14 @@ export class LeagueError extends Error implements Problem {
  * What other players may see about someone. Pages send their data to the browser, so a query
  * feeding one selects these columns, never the whole row (which holds the code hash).
  */
-export type PublicPlayer = Pick<Player, 'id' | 'name' | 'active' | 'slogan'>;
+export type PublicPlayer = Pick<Player, 'id' | 'name' | 'active' | 'slogan' | 'deletedAt'>;
 const publicColumns = {
 	id: players.id,
 	name: players.name,
 	active: players.active,
-	slogan: players.slogan
+	slogan: players.slogan,
+	/** Set: show "deleted player" instead of the name (`playerName` in `format.ts`). */
+	deletedAt: players.deletedAt
 };
 
 /** A row as the engine sees it: only a confirmed result counts. */
@@ -225,16 +228,75 @@ export function rejectResult(gameId: number, playerId: number) {
 	});
 }
 
-/** Create whatever games the week needs next, or crown its king. */
+/**
+ * Create whatever games the week needs next, or crown its king (or end it with none, when fewer
+ * than two players are left).
+ *
+ * First, anyone in the week who has left the league (archived or deleted: `active` false) is
+ * settled by `departures`: their group games are dropped, or their unfinished knock-out games
+ * forfeited. That can finish a stage, and the games created next may be theirs again (a play-off
+ * round, the final), so it repeats until the week has nothing more to do.
+ */
 function advance(tx: Tx, weekId: number) {
-	const rows = weekGames(tx, weekId);
-	const step = nextStep(weekPlayerIds(rows), rows.map(toGame));
-	if (step.create.length)
-		tx.insert(games)
-			.values(step.create.map((g) => ({ ...g, weekId })))
-			.run();
-	if (step.phase === 'done')
-		tx.update(weeks).set({ kingId: step.king, closedAt: new Date() }).where(eq(weeks.id, weekId)).run();
+	for (let pass = 0; pass < 100; pass++) {
+		const rows = weekGames(tx, weekId);
+		const ids = weekPlayerIds(rows);
+		const engineGames = rows.map(toGame);
+
+		const gone = new Set(
+			ids.length
+				? tx
+						.select({ id: players.id })
+						.from(players)
+						.where(and(inArray(players.id, ids), eq(players.active, false)))
+						.all()
+						.map((p) => p.id)
+				: []
+		);
+		const leave = departures(ids, engineGames, gone);
+		if (leave.drop.length) {
+			tx.delete(games)
+				.where(inArray(games.id, leave.drop.map((i) => rows[i].id)))
+				.run();
+			continue;
+		}
+		if (leave.forfeit.length) {
+			const now = new Date();
+			for (const { index, result } of leave.forfeit) {
+				const g = rows[index];
+				// Reported by the opponent who wins it, unless they left too.
+				const winner = result === '1-0' ? g.whiteId : g.blackId;
+				tx.update(games)
+					.set({ result, reportedById: gone.has(winner) ? null : winner, reportedAt: now, confirmedAt: now })
+					.where(eq(games.id, g.id))
+					.run();
+			}
+			continue;
+		}
+
+		const step = nextStep(ids, engineGames);
+		if (step.create.length) {
+			tx.insert(games)
+				.values(step.create.map((g) => ({ ...g, weekId })))
+				.run();
+			continue;
+		}
+		if (step.phase === 'done')
+			tx.update(weeks).set({ kingId: step.king, closedAt: new Date() }).where(eq(weeks.id, weekId)).run();
+		if (step.phase === 'abandoned')
+			tx.update(weeks).set({ kingId: null, closedAt: new Date() }).where(eq(weeks.id, weekId)).run();
+		return;
+	}
+	throw new Error(`week ${weekId}: advance did not settle`);
+}
+
+/**
+ * After a player leaves the league (archived or deleted, `active` already false, same
+ * transaction): take them out of the open week, if they are in it. See `advance`.
+ */
+export function leaveOpenWeek(tx: Tx) {
+	const week = tx.select().from(weeks).where(isNull(weeks.closedAt)).get();
+	if (week) advance(tx, week.id);
 }
 
 /**

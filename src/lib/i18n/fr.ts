@@ -34,12 +34,16 @@ export const fr = {
 		group: 'Phase de groupes',
 		playoff: 'Barrage',
 		final: 'Finale',
-		done: 'Couronné'
+		done: 'Couronné',
+		abandoned: 'Semaine annulée'
 	},
 	stage: {
 		group: 'Groupe',
 		playoff: 'Barrage',
 		final: 'Finale'
+	},
+	player: {
+		deleted: 'Joueur supprimé'
 	},
 	table: {
 		player: 'Joueur',
@@ -90,7 +94,8 @@ export const fr = {
 		shareWhatsapp: 'Partager sur WhatsApp',
 		yourMove: 'À toi de jouer',
 		knockout: 'Barrage et finale',
-		shareKing: '♔ {name} est le Roi de la Semaine {n} ! Qui ose le détrôner ?'
+		shareKing: '♔ {name} est le Roi de la Semaine {n} ! Qui ose le détrôner ?',
+		abandoned: 'Il ne reste pas assez de joueurs cette semaine : pas de roi. On remet ça la semaine prochaine.'
 	},
 	kings: {
 		title: 'Les Rois',
@@ -109,7 +114,8 @@ export const fr = {
 		submit: 'Entrer',
 		chooseName: 'Choisis ton nom.',
 		wrongCode: 'Code incorrect.',
-		locked: 'Trop d’essais. Réessaie dans {min} min.'
+		locked: 'Trop d’essais. Réessaie dans {min} min.',
+		bye: 'Compte supprimé. Merci pour les parties ♔'
 	},
 	code: {
 		title: 'Mon code',
@@ -167,7 +173,15 @@ export const fr = {
 		badName: 'Ton nom : 2 à 24 lettres (espaces, tirets et apostrophes permis).',
 		nameTaken: 'Ce nom est déjà pris. Ajoute une initiale ?',
 		sloganTooLong: 'Ta devise : {max} caractères maximum.',
-		sloganLink: 'Pas de liens dans la devise.'
+		sloganLink: 'Pas de liens dans la devise.',
+		deleteTitle: 'Supprimer mon compte',
+		deleteIntro:
+			'Ton nom, ton code et ta devise sont effacés pour de bon. Tes parties restent dans l’historique, au nom de « Joueur supprimé ».',
+		deleteWeek:
+			'Si tu joues la semaine en cours, tu en sors : en phase de groupes tes parties sont retirées, en barrage ou en finale tu perds les tiennes par forfait.',
+		deleteCode: 'Ton code, pour confirmer',
+		deleteConfirm: 'Supprimer définitivement',
+		lastAdmin: 'Tu es le dernier admin. Nomme un autre admin d’abord.'
 	},
 	admin: {
 		title: 'Admin',
@@ -187,16 +201,24 @@ export const fr = {
 		tempPinFor: 'Code provisoire de {name} :',
 		tempPinHint: 'Envoie-le-lui en privé : il choisira le sien à la connexion. Il ne sera plus affiché.',
 		badgeAdmin: 'Admin',
-		badgeInactive: 'Inactif',
+		badgeArchived: 'Archivé',
 		badgeTempPin: 'Code provisoire',
 		badgeLocked: 'Bloqué',
 		resetPin: 'Nouveau code provisoire',
-		deactivate: 'Désactiver',
-		activate: 'Réactiver',
+		archive: 'Archiver',
+		unarchive: 'Désarchiver',
 		demote: 'Retirer admin',
 		promote: 'Nommer admin',
-		deactivateHint:
-			'Un joueur désactivé est déconnecté, garde son historique et n’entre plus dans les nouvelles semaines.',
+		archiveHint:
+			'Archiver : le joueur est déconnecté, disparaît de la connexion et sort de la semaine en cours ; son historique reste et on peut le désarchiver. Supprimer : son nom et son code sont effacés pour de bon, ses parties restent au nom de « Joueur supprimé ».',
+		delete: 'Supprimer',
+		deleteTitle: 'Supprimer {name} ?',
+		deleteIntro:
+			'Son nom, son code et sa devise sont effacés pour de bon ; ses parties restent, au nom de « Joueur supprimé ». Tape son nom pour confirmer.',
+		deleteName: 'Son nom, exactement',
+		deleteConfirm: 'Supprimer définitivement',
+		deleteNameMismatch: 'Le nom ne correspond pas.',
+		deleted: '{name} est supprimé.',
 		backup: 'Sauvegarde',
 		download: 'Télécharger toute la ligue (.db)',
 		backupHint:

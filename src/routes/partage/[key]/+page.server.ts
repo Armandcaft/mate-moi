@@ -1,3 +1,4 @@
+import { playerName } from '#lib/format.ts';
 import { translator } from '#lib/i18n/index.ts';
 import { latestWeek, weekView } from '#lib/server/league.ts';
 import { shareKey, standingsLine } from '#lib/server/og.ts';
@@ -14,7 +15,7 @@ export const load: PageServerLoad = ({ url, locals }) => {
 	const step = view?.step;
 	const title =
 		step?.phase === 'done' && view
-			? t('preview.kingTitle', { name: view.players.get(step.king)?.name ?? '?', n: view.week.number })
+			? t('preview.kingTitle', { name: playerName(t, view.players.get(step.king)), n: view.week.number })
 			: view
 				? `${t('app.name')} · ${t('week.label', { n: view.week.number })}`
 				: t('app.name');

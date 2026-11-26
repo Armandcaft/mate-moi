@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	departures,
 	gamesPerPairFor,
 	gamesPerPairIn,
 	groupSchedule,
@@ -255,5 +256,115 @@ describe('games per opponent', () => {
 		const all = [...week, ...joined];
 		for (const [a, b] of pairs([1, 2, 3, 4, 5]))
 			expect(all.filter((g) => [g.whiteId, g.blackId].sort().join() === [a, b].sort().join())).toHaveLength(3);
+	});
+});
+
+describe('nextStep with fewer than two players', () => {
+	it('calls the week off: no king', () => {
+		expect(nextStep([], [])).toEqual({ phase: 'abandoned', create: [] });
+		expect(nextStep([A], [])).toEqual({ phase: 'abandoned', create: [] });
+	});
+});
+
+describe('departures (a player leaves mid-week)', () => {
+	/**
+	 * What `league.ts` does: settle the leavers, else create the next games, until nothing changes.
+	 * Returns the week's games and its last step.
+	 */
+	function settle(players: number[], start: Game[], gone: Set<number>) {
+		let games = start;
+		let ids = players;
+		for (let pass = 0; pass < 50; pass++) {
+			const { drop, forfeit } = departures(ids, games, gone);
+			if (drop.length) {
+				games = games.filter((_, i) => !drop.includes(i));
+				ids = ids.filter((id) => games.some((g) => g.stage === 'group' && (g.whiteId === id || g.blackId === id)));
+				continue;
+			}
+			if (forfeit.length) {
+				games = games.map((g, i) => {
+					const f = forfeit.find((x) => x.index === i);
+					return f ? { ...g, result: f.result } : g;
+				});
+				continue;
+			}
+			const step = nextStep(ids, games);
+			if (step.create.length) {
+				games = [...games, ...step.create.map((g) => ({ ...g, result: null }))];
+				continue;
+			}
+			return { games, step, ids };
+		}
+		throw new Error('did not settle');
+	}
+
+	const D = 4;
+	const FOUR = [A, B, C, D];
+
+	it('leaves the week alone when the player is not in it', () => {
+		const games = groupSchedule(PLAYERS, 3, 1).map((g) => ({ ...g, result: null }));
+		expect(departures(PLAYERS, games, new Set([D]))).toEqual({ drop: [], forfeit: [] });
+	});
+
+	it('drops every group game of theirs, played or not, during the group stage', () => {
+		const sched = groupSchedule(FOUR, 3, 1);
+		const games: Game[] = sched.map((g, i) => ({ ...g, result: i < 5 ? beats(g, Math.min(g.whiteId, g.blackId)) : null }));
+		const { drop, forfeit } = departures(FOUR, games, new Set([C]));
+		expect(forfeit).toEqual([]);
+		expect(drop.map((i) => games[i]).every((g) => g.whiteId === C || g.blackId === C)).toBe(true);
+		expect(drop).toHaveLength(9); // 3 opponents × 3 games
+		const left = games.filter((_, i) => !drop.includes(i));
+		// Still an even round-robin among the three others: 3 games per pair.
+		for (const [a, b] of pairs([A, B, D]))
+			expect(left.filter((g) => [g.whiteId, g.blackId].sort().join() === [a, b].sort().join())).toHaveLength(3);
+	});
+
+	it('moves on to the final when dropping their games completes the group stage', () => {
+		// Everything is played except C's games: once C leaves, the group stage is over.
+		const games: Game[] = groupSchedule(FOUR, 3, 1).map((g) =>
+			g.whiteId === C || g.blackId === C ? { ...g, result: null } : { ...g, result: beats(g, Math.min(g.whiteId, g.blackId)) }
+		);
+		const { step } = settle(FOUR, games, new Set([C]));
+		expect(step).toMatchObject({ phase: 'final', finalists: [A, B] });
+	});
+
+	it('forfeits the final for a finalist who leaves, and crowns the opponent', () => {
+		const games = group((a) => [a, a, a]); // A and B in the final
+		const withFinal = [...games, ...nextStep(PLAYERS, games).create.map((g) => ({ ...g, result: null }))];
+		const plan = departures(PLAYERS, withFinal, new Set([A]));
+		expect(plan.drop).toEqual([]);
+		expect(plan.forfeit).toEqual([{ index: withFinal.length - 1, result: '0-1' }]); // A had White
+		expect(settle(PLAYERS, withFinal, new Set([A])).step).toMatchObject({ phase: 'done', king: B });
+	});
+
+	it('forfeits their play-off games, and the final made for them later', () => {
+		// A beats both; B and C level for 2nd → a B–C play-off. C leaves: B wins it, then the final
+		// A–B is played normally. Now let A (top seed, not in the play-off) leave instead: nothing
+		// to forfeit yet, but the final created for A afterwards is forfeited at once.
+		const games = group((a, b) => (a === A ? [A, A, A] : [B, C, null]));
+		const playoff = nextStep(PLAYERS, games).create.map((g) => ({ ...g, result: null }));
+		const week = [...games, ...playoff];
+
+		const cLeaves = settle(PLAYERS, week, new Set([C]));
+		expect(cLeaves.step).toMatchObject({ phase: 'final', finalists: [A, B] });
+
+		expect(departures(PLAYERS, week, new Set([A]))).toEqual({ drop: [], forfeit: [] });
+		// B beats C in the play-off; the final A–B is created, and A forfeits it.
+		const played = week.map((g) => (g.stage === 'playoff' ? { ...g, result: beats(g, B) } : g));
+		expect(settle(PLAYERS, played, new Set([A])).step).toMatchObject({ phase: 'done', king: B });
+	});
+
+	it('calls the week off when fewer than two players are left', () => {
+		const games: Game[] = groupSchedule([A, B], 3, 1).map((g) => ({ ...g, result: null }));
+		const { step, games: left } = settle([A, B], games, new Set([A]));
+		expect(left).toEqual([]);
+		expect(step).toEqual({ phase: 'abandoned', create: [] });
+	});
+
+	it('ignores a finished week', () => {
+		const games = group((a) => [a, a, a]);
+		const [final] = nextStep(PLAYERS, games).create;
+		const done = [...games, { ...final, result: beats(final, A) }];
+		expect(departures(PLAYERS, done, new Set([A]))).toEqual({ drop: [], forfeit: [] });
 	});
 });
