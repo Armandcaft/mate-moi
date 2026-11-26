@@ -15,6 +15,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"player": "node scripts/player.ts",
+		"vapid": "node scripts/vapid.ts",
 		"test": "vitest run",
 		"db:generate": "drizzle-kit generate",
 		"start": "node build"
@@ -40,7 +41,8 @@
 		"@resvg/resvg-js": "^2.6.2",
 		"better-sqlite3": "^13.2.0",
 		"drizzle-orm": "^0.45.4",
-		"satori": "^0.63.2"
+		"satori": "^0.63.2",
+		"web-push": "^4.0.0"
 	},
 	"engines": {
 		"node": ">=22.18"

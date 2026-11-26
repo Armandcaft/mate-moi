@@ -108,7 +108,27 @@ export const games = sqliteTable(
 	(t) => [index('games_week_idx').on(t.weekId)]
 );
 
+/** A browser that receives push notifications for a player (Web Push, `push.ts`). */
+export const pushSubscriptions = sqliteTable(
+	'push_subscriptions',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		playerId: integer('player_id')
+			.notNull()
+			.references(() => players.id, { onDelete: 'cascade' }),
+		/** The push service's URL for this browser: one row per browser. */
+		endpoint: text('endpoint').notNull().unique(),
+		p256dh: text('p256dh').notNull(),
+		auth: text('auth').notNull(),
+		/** The language the player used when subscribing: notifications are written in it. */
+		locale: text('locale').notNull(),
+		createdAt: createdAt()
+	},
+	(t) => [index('push_subscriptions_player_idx').on(t.playerId)]
+);
+
 export type Player = typeof players.$inferSelect;
 export type Invite = typeof invites.$inferSelect;
 export type Week = typeof weeks.$inferSelect;
 export type GameRow = typeof games.$inferSelect;
+export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;

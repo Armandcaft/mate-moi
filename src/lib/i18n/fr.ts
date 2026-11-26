@@ -289,6 +289,25 @@ export const fr = {
 		noOpenWeek: 'Aucune semaine en cours.',
 		groupOver: 'La phase de groupes est terminée : plus de date limite.'
 	},
+	push: {
+		title: 'Notifications',
+		intro: 'Une notification quand on te déclare un résultat, quand tu joues la finale, et quand un roi est couronné.',
+		on: 'Activer les notifications',
+		off: 'Désactiver les notifications',
+		enabled: 'Activées sur cet appareil.',
+		ios: 'Sur iPhone : ajoute d’abord l’appli à l’écran d’accueil (Partager → Sur l’écran d’accueil).',
+		unsupported: 'Ce navigateur ne sait pas recevoir de notifications.',
+		denied: 'Notifications bloquées : autorise-les dans les réglages du navigateur.',
+		failed: 'Impossible d’activer les notifications. Réessaie plus tard.',
+		reportedTitle: 'Résultat à confirmer',
+		reported: '{name} a déclaré : {result}. À toi de confirmer',
+		finalTitle: 'Finale',
+		final: 'Tu joues la finale contre {name}',
+		armageddon: 'Finale nulle : Armageddon contre {name}',
+		kingTitle: 'Nouveau roi',
+		autoTitle: 'Résultat validé',
+		auto: 'Validé automatiquement après 48 h : {game}, {result}'
+	},
 	preview: {
 		kingTitle: '♔ {name} est le Roi de la Semaine {n}',
 		tagline: 'Le tournoi d’échecs de la semaine.',

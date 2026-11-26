@@ -6,12 +6,15 @@ import { db, players } from '#lib/server/db/index.ts';
 import { verifyPin } from '#lib/server/pin.ts';
 import { ProfileError, rename, setSlogan } from '#lib/server/profile.ts';
 import { sweep } from '#lib/server/league.ts';
+import { pushConfig } from '#lib/server/push.ts';
 import { say, type Locale } from '#lib/i18n/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => ({
 	name: locals.player!.name,
-	slogan: locals.player!.slogan ?? ''
+	slogan: locals.player!.slogan ?? '',
+	/** Set only when push is configured: without it the notifications section is not shown. */
+	vapidPublicKey: pushConfig()?.publicKey ?? null
 });
 
 async function attempt(locale: Locale, fn: () => Record<string, unknown>) {

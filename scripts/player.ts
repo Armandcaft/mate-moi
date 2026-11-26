@@ -138,6 +138,7 @@ switch (command) {
 		refuseIfInOpenWeek(id, n);
 		const erased = sqlite.transaction(() => {
 			sqlite.prepare('DELETE FROM sessions WHERE player_id = ?').run(id);
+			sqlite.prepare('DELETE FROM push_subscriptions WHERE player_id = ?').run(id);
 			sqlite.prepare('DELETE FROM invites WHERE created_by_id = ? AND used_at IS NULL').run(id);
 			const played = sqlite.prepare('SELECT 1 FROM games WHERE white_id = ? OR black_id = ? LIMIT 1').get(id, id);
 			if (!played) {

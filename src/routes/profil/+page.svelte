@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import Crown from '#lib/components/Crown.svelte';
 	import LangSwitcher from '#lib/components/LangSwitcher.svelte';
@@ -14,6 +15,85 @@
 		slogan = data.slogan;
 	});
 	const left = $derived(SLOGAN_MAX - [...slogan.trim()].length);
+
+	// ── Notifications ──
+	type PushState = 'checking' | 'ios' | 'unsupported' | 'denied' | 'off' | 'on' | 'failed';
+	let push = $state<PushState>('checking');
+	let pushBusy = $state(false);
+
+	/** The public key, base64url → bytes, as `subscribe` wants it. */
+	function keyBytes(key: string) {
+		const b64 = (key + '='.repeat((4 - (key.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+		return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+	}
+
+	onMount(async () => {
+		if (!data.vapidPublicKey) return;
+		if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+			// iOS offers Web Push only to an app added to the Home Screen.
+			const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+			push = ios ? 'ios' : 'unsupported';
+			return;
+		}
+		const reg = await navigator.serviceWorker.getRegistration();
+		const sub = await reg?.pushManager.getSubscription();
+		push = sub ? 'on' : (await permission()) === 'denied' ? 'denied' : 'off';
+	});
+
+	/** The Permissions API when there is one: `Notification.permission` can lag behind it. */
+	async function permission(): Promise<NotificationPermission | PermissionState> {
+		try {
+			return (await navigator.permissions.query({ name: 'notifications' })).state;
+		} catch {
+			return Notification.permission;
+		}
+	}
+
+	async function turnOn() {
+		pushBusy = true;
+		try {
+			if ((await Notification.requestPermission()) !== 'granted') {
+				push = 'denied';
+				return;
+			}
+			const reg = await navigator.serviceWorker.ready;
+			const sub = await reg.pushManager.subscribe({
+				userVisibleOnly: true,
+				applicationServerKey: keyBytes(data.vapidPublicKey!)
+			});
+			const res = await fetch('/push', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify(sub.toJSON())
+			});
+			if (!res.ok) throw new Error(`push: ${res.status}`);
+			push = 'on';
+		} catch (e) {
+			console.error(e);
+			push = 'failed';
+		} finally {
+			pushBusy = false;
+		}
+	}
+
+	async function turnOff() {
+		pushBusy = true;
+		try {
+			const reg = await navigator.serviceWorker.getRegistration();
+			const sub = await reg?.pushManager.getSubscription();
+			if (sub) {
+				await fetch('/push/off', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ endpoint: sub.endpoint })
+				});
+				await sub.unsubscribe();
+			}
+			push = 'off';
+		} finally {
+			pushBusy = false;
+		}
+	}
 
 	const field =
 		'w-full rounded-xl border border-line bg-surface px-4 py-3 text-silver outline-none focus:border-gold';
@@ -68,6 +148,26 @@
 	</form>
 
 	<a href="/code" class="btn btn-ghost w-full">{t('profile.changeCode')}</a>
+
+	{#if data.vapidPublicKey}
+		<section class="card mt-4 p-4" data-push={push}>
+			<h2 class="text-sm font-medium text-silver">{t('push.title')}</h2>
+			<p class="mt-1 text-xs text-muted">{t('push.intro')}</p>
+			{#if push === 'ios'}
+				<p class="mt-3 text-sm text-silver">{t('push.ios')}</p>
+			{:else if push === 'unsupported'}
+				<p class="mt-3 text-sm text-muted">{t('push.unsupported')}</p>
+			{:else if push === 'denied'}
+				<p class="mt-3 text-sm text-danger">{t('push.denied')}</p>
+			{:else if push === 'on'}
+				<p class="mt-3 text-sm text-gold" role="status">{t('push.enabled')}</p>
+				<button type="button" class="btn btn-ghost mt-3 w-full" disabled={pushBusy} onclick={turnOff}>{t('push.off')}</button>
+			{:else if push !== 'checking'}
+				{#if push === 'failed'}<p class="mt-3 text-sm text-danger" role="alert">{t('push.failed')}</p>{/if}
+				<button type="button" class="btn btn-ghost mt-3 w-full" disabled={pushBusy} onclick={turnOn}>{t('push.on')}</button>
+			{/if}
+		</section>
+	{/if}
 
 	<div class="mt-8 text-center">
 		<p class="mb-1 text-xs text-muted">{t('lang.label')}</p>

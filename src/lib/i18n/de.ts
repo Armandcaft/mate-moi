@@ -288,6 +288,25 @@ export const de = {
 		noOpenWeek: 'Gerade läuft keine Woche.',
 		groupOver: 'Die Gruppenphase ist vorbei: keine Frist mehr.'
 	},
+	push: {
+		title: 'Benachrichtigungen',
+		intro: 'Eine Benachrichtigung, wenn jemand ein Ergebnis gegen dich meldet, wenn du im Finale stehst und wenn ein König gekrönt wird.',
+		on: 'Benachrichtigungen einschalten',
+		off: 'Benachrichtigungen ausschalten',
+		enabled: 'Auf diesem Gerät eingeschaltet.',
+		ios: 'Auf dem iPhone: Füg die App zuerst zum Home-Bildschirm hinzu (Teilen → Zum Home-Bildschirm).',
+		unsupported: 'Dieser Browser kann keine Benachrichtigungen empfangen.',
+		denied: 'Benachrichtigungen sind blockiert: Erlaub sie in den Browser-Einstellungen.',
+		failed: 'Benachrichtigungen ließen sich nicht einschalten. Versuch es später noch mal.',
+		reportedTitle: 'Ergebnis bestätigen',
+		reported: '{name} hat gemeldet: {result}. Du musst bestätigen',
+		finalTitle: 'Finale',
+		final: 'Du spielst das Finale gegen {name}',
+		armageddon: 'Finale remis: Armageddon gegen {name}',
+		kingTitle: 'Neuer König',
+		autoTitle: 'Ergebnis bestätigt',
+		auto: 'Nach 48 Std. automatisch bestätigt: {game}, {result}'
+	},
 	preview: {
 		kingTitle: '♔ {name} ist König der Woche {n}',
 		tagline: 'Das wöchentliche Schachturnier.',

@@ -21,7 +21,9 @@ import {
 	type TimedGame
 } from '../tournament';
 import type { MessageKey, Problem } from '../i18n/index.ts';
+import type { LeagueEvent } from '../push-messages.ts';
 import { db, games, players, weeks, type GameRow, type Player, type Week } from './db';
+import { notify } from './push.ts';
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -220,7 +222,7 @@ function loadForUpdate(tx: Tx, gameId: number, playerId: number) {
 
 /** Either player reports; it counts once the other confirms. Re-reporting replaces a pending result. */
 export function reportResult(gameId: number, playerId: number, result: Result) {
-	db.transaction((tx) => {
+	const game = db.transaction((tx) => {
 		const game = loadForUpdate(tx, gameId, playerId);
 		if (!REPORTABLE.includes(result)) throw new LeagueError('league.unknownResult');
 		if (game.armageddon && result === '1/2-1/2')
@@ -229,18 +231,22 @@ export function reportResult(gameId: number, playerId: number, result: Result) {
 			.set({ result, reportedById: playerId, reportedAt: new Date(), confirmedAt: null })
 			.where(eq(games.id, gameId))
 			.run();
+		return game;
 	});
+	notify([{ type: 'reported', reporterId: playerId, whiteId: game.whiteId, blackId: game.blackId, result }]);
 }
 
 export function confirmResult(gameId: number, playerId: number) {
+	const events: LeagueEvent[] = [];
 	db.transaction((tx) => {
 		const game = loadForUpdate(tx, gameId, playerId);
 		if (!game.result) throw new LeagueError('league.nothingToConfirm');
 		if (game.reportedById === playerId)
 			throw new LeagueError('league.opponentConfirms');
 		tx.update(games).set({ confirmedAt: new Date() }).where(eq(games.id, gameId)).run();
-		advance(tx, game.weekId);
+		advance(tx, game.weekId, events);
 	});
+	notify(events);
 }
 
 /** The opponent disputes a pending result: it is cleared and must be reported again. */
@@ -265,7 +271,7 @@ export function rejectResult(gameId: number, playerId: number) {
  * forfeited. That can finish a stage, and the games created next may be theirs again (a play-off
  * round, the final), so it repeats until the week has nothing more to do.
  */
-function advance(tx: Tx, weekId: number) {
+function advance(tx: Tx, weekId: number, events: LeagueEvent[]) {
 	for (let pass = 0; pass < 100; pass++) {
 		const rows = weekGames(tx, weekId);
 		const ids = weekPlayerIds(rows);
@@ -307,10 +313,19 @@ function advance(tx: Tx, weekId: number) {
 			tx.insert(games)
 				.values(step.create.map((g) => ({ ...g, weekId })))
 				.run();
+			if (step.phase === 'final')
+				events.push({ type: 'final', finalists: step.finalists, armageddon: step.create[0].armageddon });
 			continue;
 		}
-		if (step.phase === 'done')
-			tx.update(weeks).set({ kingId: step.king, closedAt: new Date() }).where(eq(weeks.id, weekId)).run();
+		if (step.phase === 'done') {
+			const week = tx
+				.update(weeks)
+				.set({ kingId: step.king, closedAt: new Date() })
+				.where(eq(weeks.id, weekId))
+				.returning({ number: weeks.number })
+				.get();
+			events.push({ type: 'king', kingId: step.king, week: week.number });
+		}
 		if (step.phase === 'abandoned')
 			tx.update(weeks).set({ kingId: null, closedAt: new Date() }).where(eq(weeks.id, weekId)).run();
 		return;
@@ -339,6 +354,7 @@ const timed = (g: GameRow): TimedGame => ({
  * due it costs one query: the open week's unconfirmed games (`games_week_idx`).
  */
 export function sweep(now = new Date()) {
+	const events: LeagueEvent[] = [];
 	db.transaction((tx) => {
 		const rows = tx
 			.select({ game: games, deadline: weeks.deadline })
@@ -357,19 +373,24 @@ export function sweep(now = new Date()) {
 		for (const [weekId, week] of byWeek) {
 			const due = dueAt(week.games.map(timed), now.getTime(), ms(week.deadline));
 			if (nothingDue(due)) continue;
-			for (const { id, at } of due.confirm)
+			for (const { id, at, rule } of due.confirm) {
 				tx.update(games)
 					.set({ confirmedAt: new Date(at), autoConfirmed: true })
 					.where(and(eq(games.id, id), isNull(games.confirmedAt)))
 					.run();
+				const g = week.games.find((x) => x.id === id)!;
+				if (rule === 'clock' && g.result)
+					events.push({ type: 'autoConfirmed', whiteId: g.whiteId, blackId: g.blackId, result: g.result });
+			}
 			for (const { id, at } of due.unplayed)
 				tx.update(games)
 					.set({ result: '0-0', reportedById: null, reportedAt: new Date(at), confirmedAt: new Date(at) })
 					.where(and(eq(games.id, id), isNull(games.confirmedAt)))
 					.run();
-			advance(tx, weekId);
+			advance(tx, weekId, events);
 		}
 	});
+	notify(events);
 }
 
 /**
@@ -391,11 +412,12 @@ export function setDeadline(deadline: Date, now = new Date()) {
 
 /**
  * After a player leaves the league (archived or deleted, `active` already false, same
- * transaction): take them out of the open week, if they are in it. See `advance`.
+ * transaction): take them out of the open week, if they are in it. See `advance`. What that sets
+ * off (a final, a King) lands in `events`, for the caller to `notify` once committed.
  */
-export function leaveOpenWeek(tx: Tx) {
+export function leaveOpenWeek(tx: Tx, events: LeagueEvent[]) {
 	const week = tx.select().from(weeks).where(isNull(weeks.closedAt)).get();
-	if (week) advance(tx, week.id);
+	if (week) advance(tx, week.id, events);
 }
 
 /**

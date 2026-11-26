@@ -1,8 +1,10 @@
 // Leaving the league: archiving (reversible) and deleting (personal data gone, games kept).
 import { and, count, eq, isNull, ne, or } from 'drizzle-orm';
 import type { MessageKey, Problem } from '../i18n/index.ts';
-import { db, games, invites, players, sessions } from './db/index.ts';
+import { db, games, invites, players, pushSubscriptions, sessions } from './db/index.ts';
+import type { LeagueEvent } from '../push-messages.ts';
 import { leaveOpenWeek, type Tx } from './league.ts';
+import { notify } from './push.ts';
 
 /** A refusal, carrying a message key: the page puts it in the player's language. */
 export class AccountError extends Error implements Problem {
@@ -22,6 +24,7 @@ const NO_PIN = 'deleted:';
  * brings them back from the next week. A deleted player cannot be restored.
  */
 export function setArchived(playerId: number, archived: boolean) {
+	const events: LeagueEvent[] = [];
 	db.transaction((tx) => {
 		if (archived) refuseOwner(tx, playerId);
 		const done = tx
@@ -30,8 +33,9 @@ export function setArchived(playerId: number, archived: boolean) {
 			.where(and(eq(players.id, playerId), isNull(players.deletedAt)))
 			.run();
 		if (!done.changes) throw new AccountError('admin.playerNotFound');
-		if (archived) leaveOpenWeek(tx);
+		if (archived) leaveOpenWeek(tx, events);
 	});
+	notify(events);
 }
 
 /** The owner cannot be archived or deleted: ownership must be transferred first. */
@@ -61,7 +65,8 @@ export function isLastAdmin(playerId: number): boolean {
  * row itself is removed (`erased`).
  */
 export function deleteAccount(playerId: number): 'deleted' | 'erased' {
-	return db.transaction((tx) => {
+	const events: LeagueEvent[] = [];
+	const outcome = db.transaction((tx): 'deleted' | 'erased' => {
 		refuseOwner(tx, playerId);
 		const left = tx
 			.update(players)
@@ -69,9 +74,10 @@ export function deleteAccount(playerId: number): 'deleted' | 'erased' {
 			.where(and(eq(players.id, playerId), isNull(players.deletedAt)))
 			.run();
 		if (!left.changes) throw new AccountError('admin.playerNotFound');
-		leaveOpenWeek(tx);
+		leaveOpenWeek(tx, events);
 
 		tx.delete(sessions).where(eq(sessions.playerId, playerId)).run();
+		tx.delete(pushSubscriptions).where(eq(pushSubscriptions.playerId, playerId)).run();
 		tx.delete(invites)
 			.where(and(eq(invites.createdById, playerId), isNull(invites.usedAt)))
 			.run();
@@ -107,4 +113,6 @@ export function deleteAccount(playerId: number): 'deleted' | 'erased' {
 			.run();
 		return 'deleted';
 	});
+	notify(events);
+	return outcome;
 }

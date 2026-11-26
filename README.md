@@ -53,6 +53,7 @@
 | 📊 **Stats** | in the Hall of Kings: current and best streaks, win rate, games played, your *bête noire* and your favourite victim |
 | 🛡️ **Admin tab** | invites, temporary codes, archiving, deletion, promotion, one-click backup |
 | 👑 **One owner** | set from the command line; nobody can demote, archive or delete them; they hand the league on from the Admin tab |
+| 🔔 **Push notifications** | a result to confirm, your final, the new King, an auto-confirmed result; each in your language; opt in on your profile |
 | 🌍 **Three languages** | French (default), English, German; follows the phone, switchable anytime |
 | 🌗 **Light & dark** | black-and-gold or ivory board; follows the phone, or pick one on your profile |
 | 🔐 **Locked down** | peppered scrypt codes, lockout after 5 tries; only login, invitations and link previews are public |
@@ -89,6 +90,7 @@ The rules are pure, tested functions in [`src/lib/tournament/`](src/lib/tourname
 | `npm run check` · `check:watch` | type-check Svelte and TypeScript |
 | `npm run build` then `npm start` | production build, served on port 3000 |
 | `npm run preview` | preview the production build |
+| `npm run vapid` | print a `fly secrets set VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=…` line with fresh keys for push notifications |
 | `npm run db:generate` | write a migration after editing `src/lib/server/db/schema.ts` (commit `drizzle/`) |
 
 ### Players (the `player` script)
@@ -117,8 +119,22 @@ After the first admin exists, the **Admin tab** does all of this from the app.
 | `fly scale count 1` | keep **one** machine: SQLite lives on one volume |
 | `fly machine start` · `fly machine restart` | wake it up, or restart (also applies a restore) |
 | `fly secrets set PIN_PEPPER=$(openssl rand -hex 32)` | once, **before** creating players; never change it |
+| `fly secrets set VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=…` | turn on push notifications (paste the line from `npm run vapid`); optional `VAPID_SUBJECT`, default `https://mate-moi.fly.dev`. Without them the feature is hidden. Changing them cuts off every subscribed phone |
 | `fly volumes list` · `fly volumes snapshots list <id>` | the disk, and Fly's daily snapshots (5 days) |
 | `fly ssh sftp shell` → `put backup.db /data/restore.db` | upload a backup to restore it at the next start |
+
+<details>
+<summary><b>🔔 Push notifications</b></summary>
+
+Players turn them on under *My profile → Notifications* (one browser at a time; turn them on
+again on each phone). They get: a result reported against them to confirm, their final, the new
+King, and a result confirmed automatically after 48 h, in the language they used when subscribing.
+
+- **iPhone / iPad**: Safari only delivers Web Push to an app on the Home Screen
+  (Share → Add to Home Screen), then open it from there and turn notifications on. iOS 16.4+.
+- **Android, desktop**: Chrome, Firefox, Edge work in the browser.
+- The service worker (`src/service-worker.ts`) only shows notifications: it caches nothing.
+</details>
 
 <details>
 <summary><b>🚀 First deployment</b></summary>

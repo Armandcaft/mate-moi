@@ -286,6 +286,25 @@ export const en = {
 		noOpenWeek: 'No week is running.',
 		groupOver: 'The group stage is over: no deadline any more.'
 	},
+	push: {
+		title: 'Notifications',
+		intro: 'A notification when someone reports a result against you, when you play the final, and when a King is crowned.',
+		on: 'Turn on notifications',
+		off: 'Turn off notifications',
+		enabled: 'On for this device.',
+		ios: 'On iPhone: first add the app to your Home Screen (Share → Add to Home Screen).',
+		unsupported: 'This browser can’t receive notifications.',
+		denied: 'Notifications are blocked: allow them in your browser settings.',
+		failed: 'Couldn’t turn on notifications. Try again later.',
+		reportedTitle: 'Result to confirm',
+		reported: '{name} reported: {result}. Your turn to confirm',
+		finalTitle: 'Final',
+		final: 'You’re playing the final against {name}',
+		armageddon: 'Drawn final: Armageddon against {name}',
+		kingTitle: 'New King',
+		autoTitle: 'Result confirmed',
+		auto: 'Confirmed automatically after 48 h: {game}, {result}'
+	},
 	preview: {
 		kingTitle: '♔ {name} is King of the Week {n}',
 		tagline: 'The weekly chess tournament.',

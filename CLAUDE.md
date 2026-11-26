@@ -31,6 +31,14 @@ Before committing: `npm run check` and `npm test` must pass (CI runs both, plus 
   counts as played and lost by both, no points, 0 each in head-to-head; cards say « non jouée ».
   Anything that switches on a result must handle it (`scoreFor`, `describe`, the Hall's h2h, stats).
   Dates shown to players use `timeZone()` (`zone.svelte.ts`): UTC until hydrated, then the device's.
+- **Push** (Web Push, `src/lib/server/push.ts`; messages are pure in `push-messages.ts`; the
+  service worker `src/service-worker.ts` handles only `push` and `notificationclick`, **no fetch
+  handler, no cache**). Hidden unless `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` are set (`npm run
+  vapid`). League writes collect `LeagueEvent`s (reported → opponent, final → finalists, King →
+  every active player, 48 h auto-confirm → both) and call `notify(events)` **after**
+  `db.transaction` returns, never inside it: sending is fire-and-forget, errors logged; a 404/410
+  deletes the subscription. Texts use each subscription's `locale`. Account deletion drops its
+  subscriptions. `/push` and `/push/off` need a session.
 - `src/lib/server/auth.ts`, `pin.ts` — PIN login, hashed sessions, a lockout stored on the player
   row (not in memory: Fly.io restarts the idle machine). CLI codes are temporary (`must_change_pin`);
   the hook sends such a player to `/code` until they choose their own.
