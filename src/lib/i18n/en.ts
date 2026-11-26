@@ -98,6 +98,15 @@ export const en = {
 		shareKing: '♔ {name} is King of the Week {n}! Who dares to dethrone them?',
 		abandoned: 'Not enough players left this week: no king. Same time next week.'
 	},
+	nudge: {
+		button: 'Nudge',
+		head: '⏰ Nudge! {week} · {phase}',
+		toPlay: 'Still to play:',
+		toConfirm: 'Waiting for confirmation:',
+		mustConfirm: '{name} must confirm {game}',
+		nothing: 'Everything’s played, just confirm.',
+		before: '⏳ Before {when}'
+	},
 	kings: {
 		title: 'The Kings',
 		none: 'No king crowned yet.',

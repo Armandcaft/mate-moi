@@ -43,6 +43,7 @@
 |---|---|
 | 🏆 **Standings & tie-breaks** | 3 / 1 / 0 points, then head-to-head, wins, and Armageddon play-offs |
 | 📈 **Scales with the group** | 3 games per opponent up to 4 players, 2 up to 6, then 1 |
+| 📣 **Nudge** | one tap sends the group what the week is waiting for: games to play per pair, results to confirm (and by whom), the deadline |
 | 📲 **WhatsApp previews** | the share link unfurls into a standings card, King and motto included |
 | ✉️ **Invite links** | one-time, 48 h; newcomers pick their own name and code, and can join mid-week |
 | 🙋 **Profiles** | change your name, your motto (60 characters), your code; delete your account (your games stay, as “Deleted player”) |

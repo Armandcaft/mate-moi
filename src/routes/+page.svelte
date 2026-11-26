@@ -4,6 +4,7 @@
 	import Crown from '#lib/components/Crown.svelte';
 	import GameCard from '#lib/components/GameCard.svelte';
 	import { playerName, whatsapp } from '#lib/format.ts';
+	import { nudgeText } from '#lib/nudge.ts';
 	import { locale, t } from '#lib/i18n/t.svelte.ts';
 	import type { PageProps } from './$types';
 
@@ -46,6 +47,19 @@
 		const link = `${page.url.origin}/partage/${data.shareKey}?lang=${locale()}`;
 		return [head, '', ...lines, '', link].join('\n');
 	});
+
+	/** "Relancer": what the week is still waiting for, in the sharer's language. */
+	const nudge = $derived(
+		view && step
+			? nudgeText(t, {
+					weekNumber: view.week.number,
+					phase: step.phase,
+					games: view.games,
+					name,
+					link: `${page.url.origin}/`
+				})
+			: ''
+	);
 
 	let starting = $state(false);
 	/** Just joined through an invitation, straight into this week's group stage. */
@@ -177,11 +191,13 @@
 		</section>
 	{/if}
 
-	<div class="mb-8 grid gap-2 {over ? 'grid-cols-2' : ''}">
+	<div class="mb-8 grid grid-cols-2 gap-2">
 		<a href={whatsapp(shareText)} target="_blank" rel="noopener" class="btn btn-ghost">
 			{t(over ? 'week.share' : 'week.shareWhatsapp')}
 		</a>
-		{#if over}
+		{#if open && !over}
+			<a href={whatsapp(nudge)} target="_blank" rel="noopener" class="btn btn-ghost">{t('nudge.button')}</a>
+		{:else if over}
 			{@render startButton(t('week.label', { n: view.week.number + 1 }))}
 		{/if}
 	</div>

@@ -100,6 +100,15 @@ export const fr = {
 		shareKing: '♔ {name} est le Roi de la Semaine {n} ! Qui ose le détrôner ?',
 		abandoned: 'Il ne reste pas assez de joueurs cette semaine : pas de roi. On remet ça la semaine prochaine.'
 	},
+	nudge: {
+		button: 'Relancer',
+		head: '⏰ On relance ! {week} · {phase}',
+		toPlay: 'À jouer :',
+		toConfirm: 'À confirmer :',
+		mustConfirm: '{name} doit confirmer {game}',
+		nothing: 'Tout est joué, il ne reste qu’à confirmer.',
+		before: '⏳ Avant {when}'
+	},
 	kings: {
 		title: 'Les Rois',
 		none: 'Aucun roi couronné pour l’instant.',
